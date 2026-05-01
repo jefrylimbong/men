@@ -22,19 +22,19 @@ class AuthController extends Controller
 
         $user = User::where($fieldType, $request->email)->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Kredensial tidak valid (Email/Username atau Password salah)',
             ], 401);
         }
 
-        if ($user->type !== 'user') {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Anda tidak memiliki akses ke aplikasi ini',
-            ], 403);
-        }
+        // if ($user->type !== 'user') {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Anda tidak memiliki akses ke aplikasi ini',
+        //     ], 403);
+        // }
 
         $token = $user->createToken('flutter-app')->plainTextToken;
 
@@ -62,7 +62,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,'.$request->user()->id,
+            'email' => 'required|string|email|max:255|unique:users,email,' . $request->user()->id,
             'phone' => 'nullable|string|max:20',
             'address' => 'nullable|string',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
@@ -76,13 +76,13 @@ class AuthController extends Controller
 
         if ($request->hasFile('avatar')) {
             // HAPUS FOTO LAMA JIKA ADA (Kecuali default)
-            if ($user->avatar && ! in_array($user->avatar, ['null', 'avatars/user.png', '/avatars/user.png'])) {
+            if ($user->avatar && !in_array($user->avatar, ['null', 'avatars/user.png', '/avatars/user.png'])) {
                 $cleanPath = str_replace('storage/', '', $user->avatar);
                 Storage::disk('public')->delete($cleanPath);
             }
 
             $file = $request->file('avatar');
-            $filename = time().'_user_'.$user->id.'.'.$file->getClientOriginalExtension();
+            $filename = time() . '_user_' . $user->id . '.' . $file->getClientOriginalExtension();
 
             // Simpan ke storage/app/public/avatars
             $path = $file->storeAs('avatars', $filename, 'public');
@@ -98,7 +98,7 @@ class AuthController extends Controller
             'message' => 'Profil berhasil diperbarui',
             'data' => [
                 'user' => $user,
-                'avatar_url' => asset('storage/'.$user->avatar),
+                'avatar_url' => asset('storage/' . $user->avatar),
             ],
         ]);
     }
@@ -112,7 +112,7 @@ class AuthController extends Controller
 
         $user = $request->user();
 
-        if (! Hash::check($request->old_password, $user->password)) {
+        if (!Hash::check($request->old_password, $user->password)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Password lama tidak cocok',
