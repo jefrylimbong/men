@@ -6,13 +6,14 @@ use App\Models\FinanceMaster;
 use App\Models\Vendor;
 use App\Models\WithdrawalData;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 
 class FinancialReport extends Page
 {
@@ -30,6 +31,12 @@ class FinancialReport extends Page
 
     public ?array $data = [];
 
+    public $results = [];
+
+    public $reportType = '';
+
+    public $grandTotal = 0;
+
     public function mount(): void
     {
         $this->form->fill([
@@ -38,10 +45,10 @@ class FinancialReport extends Page
         ]);
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('Filter Laporan')
                     ->schema([
                         Select::make('type')
@@ -51,7 +58,7 @@ class FinancialReport extends Page
                                 'vendor' => 'Pembayaran ke Vendor',
                             ])
                             ->required()
-                            ->reactive(),
+                            ->live(),
 
                         Select::make('vendor_id')
                             ->label('Pilih Vendor')
@@ -72,31 +79,76 @@ class FinancialReport extends Page
                         DatePicker::make('date_end')
                             ->label('Sampai Tanggal')
                             ->required(),
-                    ])->columns(2),
+                    ])
+                    ->columns(2)
+                    ->footerActions([
+                        Action::make('search')
+                            ->label('Tampilkan Laporan')
+                            ->icon('heroicon-o-magnifying-glass')
+                            ->color('info')
+                            ->action('search'),
+                    ]),
             ])
             ->statePath('data');
     }
 
-    public function download(): void
+    public function search(): void
     {
-        $data = $this->form->getState();
+        $formData = $this->form->getState();
+        $this->reportType = $formData['type'];
 
         $query = WithdrawalData::query()
-            ->whereBetween('withdrawal_date', [$data['date_start'], $data['date_end']])
-            ->with(['customerData.financeBranch.financeMaster', 'vendor']);
+            ->whereBetween('withdrawal_date', [$formData['date_start'], $formData['date_end']])
+            ->with(['customerData.financeBranch.financeMaster', 'vendor', 'bastk'])
+            ->orderBy('withdrawal_date', 'desc');
+
+        if ($formData['type'] === 'vendor' && $formData['vendor_id']) {
+            $query->where('vendor_id', $formData['vendor_id']);
+        }
+
+        if ($formData['type'] === 'finance' && $formData['finance_master_id']) {
+            $query->whereHas('customerData.financeBranch', function ($q) use ($formData) {
+                $q->where('finance_master_id', $formData['finance_master_id']);
+            });
+        }
+
+        $this->results = $query->get();
+
+        $this->grandTotal = $this->results->sum(function ($item) {
+            return $this->reportType === 'finance'
+                ? ($item->estimated_payout ?? 0)
+                : (($item->bailout_amount ?? 0) + ($item->vendor_fee ?? 0));
+        });
+
+        if ($this->results->isEmpty()) {
+            Notification::make()
+                ->title('Tidak ada data')
+                ->warning()
+                ->send();
+        }
+    }
+
+    public function download(): void
+    {
+        $formData = $this->form->getState();
+
+        $query = WithdrawalData::query()
+            ->whereBetween('withdrawal_date', [$formData['date_start'], $formData['date_end']])
+            ->with(['customerData.financeBranch.financeMaster', 'vendor', 'bastk'])
+            ->orderBy('withdrawal_date', 'desc');
 
         $entityName = 'Semua';
 
-        if ($data['type'] === 'vendor' && $data['vendor_id']) {
-            $query->where('vendor_id', $data['vendor_id']);
-            $entityName = Vendor::find($data['vendor_id'])?->nama;
+        if ($formData['type'] === 'vendor' && $formData['vendor_id']) {
+            $query->where('vendor_id', $formData['vendor_id']);
+            $entityName = Vendor::find($formData['vendor_id'])?->nama;
         }
 
-        if ($data['type'] === 'finance' && $data['finance_master_id']) {
-            $query->whereHas('customerData.financeBranch', function ($q) use ($data) {
-                $q->where('finance_master_id', $data['finance_master_id']);
+        if ($formData['type'] === 'finance' && $formData['finance_master_id']) {
+            $query->whereHas('customerData.financeBranch', function ($q) use ($formData) {
+                $q->where('finance_master_id', $formData['finance_master_id']);
             });
-            $entityName = FinanceMaster::find($data['finance_master_id'])?->fin_name;
+            $entityName = FinanceMaster::find($formData['finance_master_id'])?->fin_name;
         }
 
         $results = $query->get();
@@ -112,16 +164,15 @@ class FinancialReport extends Page
         }
 
         $pdf = Pdf::loadView('reports.financial-report-pdf', [
-            'type' => $data['type'],
+            'type' => $formData['type'],
             'data' => $results,
-            'date_start' => $data['date_start'],
-            'date_end' => $data['date_end'],
+            'date_start' => $formData['date_start'],
+            'date_end' => $formData['date_end'],
             'entity_name' => $entityName,
         ]);
 
-        $filename = 'Laporan_'.ucfirst($data['type']).'_'.now()->format('Ymd_His').'.pdf';
+        $filename = 'Laporan_'.ucfirst($formData['type']).'_'.now()->format('Ymd_His').'.pdf';
 
-        // Filament way to download
         $this->dispatch('download-file', [
             'content' => base64_encode($pdf->output()),
             'filename' => $filename,

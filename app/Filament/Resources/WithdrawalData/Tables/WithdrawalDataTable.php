@@ -9,6 +9,7 @@ use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class WithdrawalDataTable
 {
@@ -73,6 +74,35 @@ class WithdrawalDataTable
                         'paid' => 'Lunas',
                         'canceled' => 'Dibatalkan',
                     ]),
+                SelectFilter::make('deadline_status')
+                    ->label('Status Deadline Finance')
+                    ->options([
+                        'safe' => 'Aman (> 3 Hari)',
+                        'warning' => 'Mendekati (1-3 Hari)',
+                        'danger' => 'Lewat Deadline',
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (empty($data['value'])) {
+                            return $query;
+                        }
+
+                        $today = now()->startOfDay();
+                        $threeDaysFromNow = now()->addDays(3)->endOfDay();
+
+                        return match ($data['value']) {
+                            'safe' => $query->where('is_finance_paid', false)
+                                ->whereNotNull('finance_deadline')
+                                ->whereDate('finance_deadline', '>', $threeDaysFromNow),
+                            'warning' => $query->where('is_finance_paid', false)
+                                ->whereNotNull('finance_deadline')
+                                ->whereDate('finance_deadline', '>=', $today)
+                                ->whereDate('finance_deadline', '<=', $threeDaysFromNow),
+                            'danger' => $query->where('is_finance_paid', false)
+                                ->whereNotNull('finance_deadline')
+                                ->whereDate('finance_deadline', '<', $today),
+                            default => $query,
+                        };
+                    }),
             ])
             ->actions([
                 EditAction::make(),

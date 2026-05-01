@@ -48,7 +48,8 @@ class WithdrawalDataForm
                                         <div><b>Nama:</b> {$data->nama}</div>
                                         <div><b>No Plat:</b> {$data->nopol}</div>
                                         <div><b>Tipe:</b> {$data->tipe}</div>
-                                        <div><b>Finance:</b> ".($data->financeBranch->financeMaster->fin_name ?? '-')."</div>
+                                        <div><b>Finance:</b> ".($data->financeBranch->financeMaster->fin_name ?? '-').'</div>
+                                        <div><b>Cabang:</b> '.($data->financeBranch->locationMaster->name ?? '-')."</div>
                                         <div><b>No Mesin:</b> {$data->nosin}</div>
                                         <div><b>No Rangka:</b> {$data->norak}</div>
                                     </div>
@@ -167,8 +168,14 @@ class WithdrawalDataForm
                     ->schema([
                         TextInput::make('estimated_payout')
                             ->label('Estimasi Cair Finance (Tagihan)')
-                            ->numeric()
                             ->prefix('Rp')
+                            ->extraAttributes(['x-mask' => '9.999.999.999.999'])
+                            ->afterStateHydrated(function ($state, $set) {
+                                if ($state) {
+                                    $set('estimated_payout', number_format((float) $state, 0, ',', '.'));
+                                }
+                            })
+                            ->dehydrateStateUsing(fn ($state) => $state ? str_replace('.', '', $state) : 0)
                             ->reactive()
                             ->required()
                             ->columnSpan(1),
