@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -31,7 +33,7 @@ use Laravel\Sanctum\HasApiTokens;
     'is_active',
 ])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
@@ -81,5 +83,10 @@ class User extends Authenticatable
         $permissions = $this->permissions[$resource] ?? [];
 
         return in_array("{$action}_{$resource}", $permissions);
+    }
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->is_active;
     }
 }
