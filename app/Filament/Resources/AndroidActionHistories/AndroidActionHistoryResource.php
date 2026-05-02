@@ -52,7 +52,8 @@ class AndroidActionHistoryResource extends Resource
                 TextColumn::make('index')
                     ->label('No')
                     ->rowIndex(),
-                TextColumn::make('name')
+                TextColumn::make('user.name')
+                    ->label('Name')
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('action')
