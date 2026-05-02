@@ -15,7 +15,7 @@ class WithdrawalController extends Controller
      */
     public function index(Request $request)
     {
-        $withdrawals = WithdrawalData::with(['finance', 'vendor'])
+        $withdrawals = WithdrawalData::with(['customerData', 'vendor'])
             ->where('user_id', $request->user()->id)
             ->latest()
             ->paginate(20);
@@ -53,6 +53,28 @@ class WithdrawalController extends Controller
             'message' => 'Data penarikan berhasil disimpan',
             'data' => $withdrawal,
         ], 201);
+    }
+
+    /**
+     * Update withdrawal status.
+     */
+    public function update(Request $request, $id)
+    {
+        $withdrawal = WithdrawalData::where('user_id', $request->user()->id)->findOrFail($id);
+
+        $validated = $request->validate([
+            'status' => 'required|string|max:255',
+        ]);
+
+        $withdrawal->update([
+            'status' => $validated['status'],
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Status penarikan berhasil diperbarui',
+            'data' => $withdrawal,
+        ]);
     }
 
     /**

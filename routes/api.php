@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rute untuk Penarikan Kendaraan (Field Worker)
     Route::get('/withdrawals', [WithdrawalController::class, 'index']);
     Route::post('/withdrawals', [WithdrawalController::class, 'store']);
+    Route::put('/withdrawals/{id}', [WithdrawalController::class, 'update']);
     Route::get('/withdrawals/masters', [WithdrawalController::class, 'getMasters']);
 
     // Rute untuk Android Action History

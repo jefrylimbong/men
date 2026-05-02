@@ -59,7 +59,15 @@ class AndroidActionHistoryResource extends Resource
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('description')
+                    ->limit(30),
+                TextColumn::make('address')
+                    ->label('Location/Address')
+                    ->description(fn ($record) => $record->latitude ? "{$record->latitude}, {$record->longitude}" : null)
+                    ->wrap()
                     ->limit(50),
+                TextColumn::make('duration_seconds')
+                    ->label('Duration')
+                    ->formatStateUsing(fn ($state) => $state ? "{$state}s" : '-'),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable(),

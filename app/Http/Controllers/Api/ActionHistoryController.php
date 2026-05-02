@@ -15,6 +15,9 @@ class ActionHistoryController extends Controller
             'name' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'duration_seconds' => 'nullable|integer',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'address' => 'nullable|string',
         ]);
 
         $history = AndroidActionHistory::create([
@@ -23,6 +26,9 @@ class ActionHistoryController extends Controller
             'action' => $validated['action'],
             'description' => $validated['description'],
             'duration_seconds' => $validated['duration_seconds'] ?? 0,
+            'latitude' => $validated['latitude'] ?? null,
+            'longitude' => $validated['longitude'] ?? null,
+            'address' => $validated['address'] ?? null,
         ]);
 
         return response()->json([

@@ -47,16 +47,12 @@ class CustomerController extends Controller
 
         if ($user && $user->type === 'user') {
             $assignedFinanceIds = $user->financeMasters()->pluck('finance_masters.id');
-            $count = $assignedFinanceIds->count();
 
-            if ($count > 0) {
+            if ($assignedFinanceIds->isNotEmpty()) {
                 if ($isSync) {
                     $branchIds = FinanceBranch::whereIn('finance_master_id', $assignedFinanceIds)->pluck('id');
-
                     $lastId = $request->input('last_id', 0);
 
-                    // Optimasi Ekstrem: Gunakan JOIN agar database hanya dieksekusi 1x (Sangat Cepat)
-                    // Dan ratakan struktur JSON agar payload lebih kecil
                     $customers = CustomerData::query()
                         ->join('finance_branches', 'customer_data.finance_branch_id', '=', 'finance_branches.id')
                         ->join('finance_masters', 'finance_branches.finance_master_id', '=', 'finance_masters.id')
@@ -72,70 +68,19 @@ class CustomerController extends Controller
                             'location_masters.name as location_name'
                         )
                         ->where('customer_data.is_active', true)
-
-                        /**
-                         * FILTER CABANG (Toggle)
-                         * Hilangkan komentar line di bawah jika ingin membatasi data berdasarkan cabang yang diassign ke user.
-                         * Berikan komentar (//) jika ingin menarik SEMUA data aktif ke HP.
-                         */
                         ->whereIn('customer_data.finance_branch_id', $branchIds)
-
                         ->where('customer_data.id', '>', $lastId)
                         ->oldest('customer_data.id')
                         ->simplePaginate(2000);
                 } else {
-                    // Pencarian Online: Limit menjadi 5 dan lakukan alokasi kuota dinamis
-                    $dataLimit = $user->data_limit > 0 ? $user->data_limit : 5;
-                    $totalLimit = 5; // Selalu 5 untuk pencarian online agar terhindar dari chunking error
-
-                    $financeCounts = [];
-                    foreach ($assignedFinanceIds as $financeId) {
-                        $subQuery = clone $baseQuery;
-                        $subQuery->whereHas('financeBranch', function ($q) use ($financeId) {
-                            $q->where('finance_master_id', $financeId);
-                        });
-                        $financeCounts[$financeId] = $subQuery->count();
-                    }
-
-                    $quotas = array_fill_keys($assignedFinanceIds->toArray(), 0);
-                    $remainingLimit = $totalLimit;
-                    $activeFinances = $assignedFinanceIds->toArray();
-
-                    while ($remainingLimit > 0 && count($activeFinances) > 0) {
-                        $share = (int) ceil($remainingLimit / count($activeFinances));
-
-                        foreach ($activeFinances as $key => $financeId) {
-                            $available = $financeCounts[$financeId] - $quotas[$financeId];
-
-                            if ($available <= 0) {
-                                unset($activeFinances[$key]);
-
-                                continue;
-                            }
-
-                            $take = min($share, $available);
-                            $quotas[$financeId] += $take;
-                            $remainingLimit -= $take;
-
-                            if ($remainingLimit <= 0) {
-                                break;
-                            }
-                        }
-                    }
-
-                    foreach ($assignedFinanceIds as $financeId) {
-                        if ($quotas[$financeId] > 0) {
-                            $subQuery = clone $baseQuery;
-                            $subQuery->whereHas('financeBranch', function ($q) use ($financeId) {
-                                $q->where('finance_master_id', $financeId);
-                            });
-
-                            $subQuery->latest()->limit($quotas[$financeId]);
-                            $customers = $customers->concat($subQuery->get());
-                        }
-                    }
-
-                    $customers = $customers->sortByDesc('id')->take($totalLimit)->values();
+                    // Pencarian Online Teroptimasi: Satu Query Langsung
+                    $customers = $baseQuery
+                        ->whereHas('financeBranch', function ($q) use ($assignedFinanceIds) {
+                            $q->whereIn('finance_master_id', $assignedFinanceIds);
+                        })
+                        ->latest()
+                        ->limit(10) // Tingkatkan limit ke 10 agar lebih berguna
+                        ->get();
                 }
             }
 
