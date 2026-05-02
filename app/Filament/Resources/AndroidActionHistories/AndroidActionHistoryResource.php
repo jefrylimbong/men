@@ -57,6 +57,7 @@ class AndroidActionHistoryResource extends Resource
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('action')
+                    ->formatStateUsing(fn ($state, $record) => $state.($record->name ? ' : '.$record->name : ''))
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('description')
