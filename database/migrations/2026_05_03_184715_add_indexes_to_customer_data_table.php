@@ -12,20 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('customer_data', function (Blueprint $table) {
-            $table->index('nopol');
-            $table->index('nama');
-            $table->index('norak');
-            $table->index('nosin');
+            $table->fullText(['nopol', 'nama', 'norak', 'nosin'], 'customer_search_index');
         });
     }
 
     public function down(): void
     {
         Schema::table('customer_data', function (Blueprint $table) {
-            $table->dropIndex(['nopol']);
-            $table->dropIndex(['nama']);
-            $table->dropIndex(['norak']);
-            $table->dropIndex(['nosin']);
+            $table->dropFullText('customer_search_index');
         });
     }
 };

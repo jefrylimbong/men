@@ -25,22 +25,21 @@ class CustomerController extends Controller
             $search = $request->search;
             $searchBy = $request->searchBy ?? 'semua';
 
-            $baseQuery->where(function ($q) use ($search, $searchBy) {
-                if ($searchBy === 'nopol') {
-                    $q->where('nopol', 'like', "%{$search}%");
-                } elseif ($searchBy === 'norak') {
-                    $q->where('norak', 'like', "%{$search}%");
-                } elseif ($searchBy === 'nosin') {
-                    $q->where('nosin', 'like', "%{$search}%");
-                } elseif ($searchBy === 'nama') {
-                    $q->where('nama', 'like', "%{$search}%");
-                } else {
-                    $q->where('nopol', 'like', "%{$search}%")
-                        ->orWhere('nama', 'like', "%{$search}%")
-                        ->orWhere('norak', 'like', "%{$search}%")
-                        ->orWhere('nosin', 'like', "%{$search}%");
-                }
-            });
+            // Optimasi: Gunakan Full-Text Search jika tersedia (lebih cepat dari LIKE %...%)
+            // Kita tambahkan wildcard '*' di akhir untuk mendukung partial match
+            $searchTerm = $search . '*';
+
+            if ($searchBy === 'nopol') {
+                $baseQuery->whereFullText('nopol', $searchTerm, ['mode' => 'boolean']);
+            } elseif ($searchBy === 'norak') {
+                $baseQuery->whereFullText('norak', $searchTerm, ['mode' => 'boolean']);
+            } elseif ($searchBy === 'nosin') {
+                $baseQuery->whereFullText('nosin', $searchTerm, ['mode' => 'boolean']);
+            } elseif ($searchBy === 'nama') {
+                $baseQuery->whereFullText('nama', $searchTerm, ['mode' => 'boolean']);
+            } else {
+                $baseQuery->whereFullText(['nopol', 'nama', 'norak', 'nosin'], $searchTerm, ['mode' => 'boolean']);
+            }
         }
 
         $assignedFinanceIds = $user ? $user->financeMasters()->pluck('finance_masters.id') : collect();
