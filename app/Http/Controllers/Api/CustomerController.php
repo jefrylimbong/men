@@ -29,17 +29,8 @@ class CustomerController extends Controller
             // Kita tambahkan wildcard '*' di akhir untuk mendukung partial match
             $searchTerm = $search . '*';
 
-            if ($searchBy === 'nopol') {
-                $baseQuery->whereFullText('nopol', $searchTerm, ['mode' => 'boolean']);
-            } elseif ($searchBy === 'norak') {
-                $baseQuery->whereFullText('norak', $searchTerm, ['mode' => 'boolean']);
-            } elseif ($searchBy === 'nosin') {
-                $baseQuery->whereFullText('nosin', $searchTerm, ['mode' => 'boolean']);
-            } elseif ($searchBy === 'nama') {
-                $baseQuery->whereFullText('nama', $searchTerm, ['mode' => 'boolean']);
-            } else {
-                $baseQuery->whereFullText(['nopol', 'nama', 'norak', 'nosin'], $searchTerm, ['mode' => 'boolean']);
-            }
+            // Fokus hanya pada nopol agar pencarian sangat cepat
+            $baseQuery->whereFullText('nopol', $searchTerm, ['mode' => 'boolean']);
         }
 
         $assignedFinanceIds = $user ? $user->financeMasters()->pluck('finance_masters.id') : collect();
