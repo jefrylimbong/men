@@ -47,8 +47,8 @@ class CustomerController extends Controller
 
         if (! $isSync) {
             // Pencarian Online: Buka akses untuk semua data aktif tanpa filter cabang
+            // Optimasi: Hapus latest() karena order by created_at sangat lambat jika data banyak
             $customers = $baseQuery
-                ->latest()
                 ->limit(10)
                 ->get();
         } else {
