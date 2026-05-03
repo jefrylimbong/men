@@ -12,6 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('customer_data', function (Blueprint $table) {
+            $table->fullText('nopol');
+            $table->fullText('nama');
+            $table->fullText('norak');
+            $table->fullText('nosin');
             $table->fullText(['nopol', 'nama', 'norak', 'nosin'], 'customer_search_index');
         });
     }
@@ -19,6 +23,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('customer_data', function (Blueprint $table) {
+            $table->dropFullText(['nopol']);
+            $table->dropFullText(['nama']);
+            $table->dropFullText(['norak']);
+            $table->dropFullText(['nosin']);
             $table->dropFullText('customer_search_index');
         });
     }
