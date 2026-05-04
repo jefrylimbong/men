@@ -41,16 +41,24 @@ class ActionHistoryController extends Controller
     public function myHistory(Request $request)
     {
         $user = $request->user();
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
         
-        $histories = AndroidActionHistory::where('user_id', $user->id)
-            ->latest()
-            ->limit(50)
-            ->get();
+        $query = AndroidActionHistory::where('user_id', $user->id);
+
+        if ($startDate && $endDate) {
+            // Filter berdasarkan range tanggal
+            $query->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        } else {
+            // Default: Hari ini
+            $query->whereDate('created_at', now()->today());
+        }
+
+        $histories = $query->latest()->get();
 
         return response()->json([
             'status' => 'success',
             'debug_user_id' => $user->id,
-            'debug_user_name' => $user->name,
             'data' => $histories,
         ]);
     }
