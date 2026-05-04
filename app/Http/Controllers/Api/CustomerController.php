@@ -28,20 +28,9 @@ class CustomerController extends Controller
         if (! $isSync) {
             $search = $request->input('search', '');
             
-            if (! empty($search)) {
-                // Untuk N-Gram, gunakan pencarian natural tanpa wildcard agar lebih akurat
-                $baseQuery->whereFullText('nopol', $search);
-            }
-
             try {
-                $customers = $baseQuery
-                    ->limit(10)
-                    ->get();
-            } catch (\Exception $e) {
-                // Jika Full-Text gagal (indeks belum ada), gunakan LIKE biasa
-                \Log::error("Full-Text Search failed, falling back to LIKE: " . $e->getMessage());
-                
-                $fallbackQuery = CustomerData::select('id', 'nopol', 'nama', 'norak', 'nosin', 'tipe', 'finance_branch_id', 'is_active')
+                // Gunakan query builder baru agar pencarian Full-Text tidak "mengotori" fallback
+                $onlineQuery = CustomerData::select('id', 'nopol', 'nama', 'norak', 'nosin', 'tipe', 'finance_branch_id', 'is_active')
                     ->with(['financeBranch' => function($query) {
                         $query->select('id', 'location_master_id')
                               ->with('locationMaster:id,name');
@@ -49,10 +38,25 @@ class CustomerController extends Controller
                     ->where('is_active', true);
 
                 if (! empty($search)) {
-                    $fallbackQuery->where('nopol', 'LIKE', "%{$search}%");
+                    $onlineQuery->whereFullText('nopol', $search);
                 }
 
-                $customers = $fallbackQuery->limit(10)->get();
+                $customers = $onlineQuery->limit(10)->get();
+            } catch (\Exception $e) {
+                // Jika Full-Text gagal, gunakan LIKE biasa sebagai cadangan (fallback)
+                \Log::error("Search error (Full-Text failed): " . $e->getMessage());
+
+                $customers = CustomerData::select('id', 'nopol', 'nama', 'norak', 'nosin', 'tipe', 'finance_branch_id', 'is_active')
+                    ->with(['financeBranch' => function($query) {
+                        $query->select('id', 'location_master_id')
+                              ->with('locationMaster:id,name');
+                    }])
+                    ->where('is_active', true)
+                    ->when(! empty($search), function($q) use ($search) {
+                        return $q->where('nopol', 'LIKE', "%{$search}%");
+                    })
+                    ->limit(10)
+                    ->get();
             }
         } else {
             // Sinkronisasi: Tetap gunakan filter cabang (kecuali superadmin)
