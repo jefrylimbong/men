@@ -12,6 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('customer_data', function (Blueprint $table) {
+            // Hapus index lama jika sudah ada (agar tidak duplicate error)
+            try {
+                $table->dropFullText('customer_search_index');
+            } catch (\Exception $e) {}
+            try {
+                $table->dropFullText(['nopol']);
+            } catch (\Exception $e) {}
+
+            // Buat indeks baru
             $table->fullText('nopol');
             $table->fullText('nama');
             $table->fullText('norak');
