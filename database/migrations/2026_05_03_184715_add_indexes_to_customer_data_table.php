@@ -11,16 +11,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('customer_data', function (Blueprint $table) {
-            // Hapus index lama jika sudah ada (agar tidak duplicate error)
-            try {
-                $table->dropFullText('customer_search_index');
-            } catch (\Exception $e) {}
-            try {
-                $table->dropFullText(['nopol']);
-            } catch (\Exception $e) {}
+        // Hapus indeks jika sudah ada (manual via SQL agar aman)
+        try {
+            \DB::statement('ALTER TABLE customer_data DROP INDEX customer_search_index');
+        } catch (\Exception $e) {}
 
-            // Buat indeks baru
+        try {
+            \DB::statement('ALTER TABLE customer_data DROP INDEX customer_data_nopol_fulltext');
+        } catch (\Exception $e) {}
+
+        Schema::table('customer_data', function (Blueprint $table) {
+            // Buat ulang semua indeks
             $table->fullText('nopol');
             $table->fullText('nama');
             $table->fullText('norak');
