@@ -12,13 +12,19 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Hapus indeks lama agar bisa dibuat ulang dengan N-Gram
         try { \Illuminate\Support\Facades\DB::statement('ALTER TABLE customer_data DROP INDEX customer_search_index'); } catch (\Exception $e) {}
         try { \Illuminate\Support\Facades\DB::statement('ALTER TABLE customer_data DROP INDEX customer_data_nopol_fulltext'); } catch (\Exception $e) {}
 
-        try { \Illuminate\Support\Facades\DB::statement('ALTER TABLE `customer_data` ADD FULLTEXT `customer_data_nopol_fulltext`(`nopol`)'); } catch (\Exception $e) {}
+        // Buat indeks Full-Text dengan N-Gram Parser khusus Nopol (agar bisa cari angka di tengah)
+        try { \Illuminate\Support\Facades\DB::statement('ALTER TABLE `customer_data` ADD FULLTEXT `customer_data_nopol_fulltext`(`nopol`) WITH PARSER ngram'); } catch (\Exception $e) {}
+        
+        // Indeks lainnya tetap standar
         try { \Illuminate\Support\Facades\DB::statement('ALTER TABLE `customer_data` ADD FULLTEXT `customer_data_nama_fulltext`(`nama`)'); } catch (\Exception $e) {}
         try { \Illuminate\Support\Facades\DB::statement('ALTER TABLE `customer_data` ADD FULLTEXT `customer_data_norak_fulltext`(`norak`)'); } catch (\Exception $e) {}
         try { \Illuminate\Support\Facades\DB::statement('ALTER TABLE `customer_data` ADD FULLTEXT `customer_data_nosin_fulltext`(`nosin`)'); } catch (\Exception $e) {}
+        
+        // Indeks gabungan untuk pencarian luas
         try { \Illuminate\Support\Facades\DB::statement('ALTER TABLE `customer_data` ADD FULLTEXT `customer_search_index`(`nopol`, `nama`, `norak`, `nosin`)'); } catch (\Exception $e) {}
     }
 

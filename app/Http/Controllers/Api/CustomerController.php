@@ -29,8 +29,8 @@ class CustomerController extends Controller
             $search = $request->input('search', '');
             
             if (! empty($search)) {
-                $searchTerm = $search . '*';
-                $baseQuery->whereFullText('nopol', $searchTerm, ['mode' => 'boolean']);
+                // Untuk N-Gram, gunakan pencarian natural tanpa wildcard agar lebih akurat
+                $baseQuery->whereFullText('nopol', $search);
             }
 
             try {
