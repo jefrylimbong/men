@@ -38,7 +38,8 @@ class CustomerController extends Controller
                     ->where('is_active', true);
 
                 if (! empty($search)) {
-                    $onlineQuery->whereFullText('nopol', $search);
+                    // Gunakan tanda kutip agar N-Gram mencari urutan karakter yang persis (Phrase Match)
+                    $onlineQuery->whereFullText('nopol', '"' . $search . '"', ['mode' => 'boolean']);
                 }
 
                 $customers = $onlineQuery->limit(10)->get();
