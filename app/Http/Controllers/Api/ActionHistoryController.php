@@ -37,4 +37,19 @@ class ActionHistoryController extends Controller
             'data' => $history,
         ], 201);
     }
+
+    public function myHistory(Request $request)
+    {
+        $user = $request->user();
+        
+        $histories = AndroidActionHistory::where('user_id', $user->id)
+            ->latest()
+            ->limit(50)
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $histories,
+        ]);
+    }
 }

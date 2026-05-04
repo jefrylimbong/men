@@ -17,9 +17,9 @@ class CustomerController extends Controller
 
         // Optimasi: Hanya ambil kolom yang dibutuhkan
         $baseQuery = CustomerData::select('id', 'nopol', 'nama', 'norak', 'nosin', 'tipe', 'finance_branch_id', 'is_active')
-            ->with(['financeBranch' => function($query) {
+            ->with(['financeBranch' => function ($query) {
                 $query->select('id', 'location_master_id')
-                      ->with('locationMaster:id,name');
+                    ->with('locationMaster:id,name');
             }])
             ->where('is_active', true);
 
@@ -27,9 +27,8 @@ class CustomerController extends Controller
 
         if (! $isSync) {
             $search = $request->input('search', '');
-            
+
             try {
-                // Optimasi: Gunakan Join agar jauh lebih cepat daripada 'with' relasi
                 $onlineQuery = CustomerData::query()
                     ->leftJoin('finance_branches', 'customer_data.finance_branch_id', '=', 'finance_branches.id')
                     ->leftJoin('location_masters', 'finance_branches.location_master_id', '=', 'location_masters.id')
@@ -43,30 +42,24 @@ class CustomerController extends Controller
                     ->where('customer_data.is_active', true);
 
                 if (! empty($search)) {
-                    $onlineQuery->whereFullText('customer_data.nopol', '"' . $search . '"', ['mode' => 'boolean']);
+                    // Gunakan whereRaw agar lebih presisi mengenali indeks nopol
+                    $onlineQuery->whereRaw('MATCH(nopol) AGAINST(? IN BOOLEAN MODE)', ['"'.$search.'"']);
                 }
 
                 $customers = $onlineQuery->limit(10)->get();
             } catch (\Exception $e) {
-                \Log::error("Search error (Join/Full-Text failed): " . $e->getMessage());
+                \Log::error('Search error (whereRaw/Full-Text failed): '.$e->getMessage());
 
-                // Fallback tetap menggunakan Join agar tidak lambat
+                // Fallback aman menggunakan LIKE
                 $customers = CustomerData::query()
                     ->leftJoin('finance_branches', 'customer_data.finance_branch_id', '=', 'finance_branches.id')
                     ->leftJoin('location_masters', 'finance_branches.location_master_id', '=', 'location_masters.id')
-                    ->select(
-                        'customer_data.id',
-                        'customer_data.nopol',
-                        'customer_data.nama',
-                        'customer_data.tipe',
-                        'location_masters.name as location_name'
-                    )
+                    ->select('customer_data.id', 'customer_data.nopol', 'customer_data.nama', 'customer_data.tipe', 'location_masters.name as location_name')
                     ->where('customer_data.is_active', true)
-                    ->when(! empty($search), function($q) use ($search) {
+                    ->when(! empty($search), function ($q) use ($search) {
                         return $q->where('customer_data.nopol', 'LIKE', "%{$search}%");
                     })
-                    ->limit(10)
-                    ->get();
+                    ->limit(10)->get();
             }
         } else {
             // Sinkronisasi: Tetap gunakan filter cabang (kecuali superadmin)

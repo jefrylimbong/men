@@ -30,6 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Rute untuk Android Action History
     Route::post('/action-history', [ActionHistoryController::class, 'store']);
+    Route::get('/action-history/my', [ActionHistoryController::class, 'myHistory']);
 
     // Rute untuk Dashboard Admin
     Route::get('/dashboard', [DashboardController::class, 'index']);

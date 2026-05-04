@@ -48,6 +48,7 @@ class AndroidActionHistoryResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('index')
                     ->label('No')
@@ -60,8 +61,6 @@ class AndroidActionHistoryResource extends Resource
                     ->formatStateUsing(fn ($state, $record) => $state.($record->name ? ' : '.$record->name : ''))
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('description')
-                    ->limit(30),
                 TextColumn::make('address')
                     ->label('Location/Address')
                     ->description(fn ($record) => $record->latitude ? "{$record->latitude}, {$record->longitude}" : null)
