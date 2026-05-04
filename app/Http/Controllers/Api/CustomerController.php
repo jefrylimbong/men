@@ -29,32 +29,41 @@ class CustomerController extends Controller
             $search = $request->input('search', '');
             
             try {
-                // Gunakan query builder baru agar pencarian Full-Text tidak "mengotori" fallback
-                $onlineQuery = CustomerData::select('id', 'nopol', 'nama', 'norak', 'nosin', 'tipe', 'finance_branch_id', 'is_active')
-                    ->with(['financeBranch' => function($query) {
-                        $query->select('id', 'location_master_id')
-                              ->with('locationMaster:id,name');
-                    }])
-                    ->where('is_active', true);
+                // Optimasi: Gunakan Join agar jauh lebih cepat daripada 'with' relasi
+                $onlineQuery = CustomerData::query()
+                    ->leftJoin('finance_branches', 'customer_data.finance_branch_id', '=', 'finance_branches.id')
+                    ->leftJoin('location_masters', 'finance_branches.location_master_id', '=', 'location_masters.id')
+                    ->select(
+                        'customer_data.id',
+                        'customer_data.nopol',
+                        'customer_data.nama',
+                        'customer_data.tipe',
+                        'location_masters.name as location_name'
+                    )
+                    ->where('customer_data.is_active', true);
 
                 if (! empty($search)) {
-                    // Gunakan tanda kutip agar N-Gram mencari urutan karakter yang persis (Phrase Match)
-                    $onlineQuery->whereFullText('nopol', '"' . $search . '"', ['mode' => 'boolean']);
+                    $onlineQuery->whereFullText('customer_data.nopol', '"' . $search . '"', ['mode' => 'boolean']);
                 }
 
                 $customers = $onlineQuery->limit(10)->get();
             } catch (\Exception $e) {
-                // Jika Full-Text gagal, gunakan LIKE biasa sebagai cadangan (fallback)
-                \Log::error("Search error (Full-Text failed): " . $e->getMessage());
+                \Log::error("Search error (Join/Full-Text failed): " . $e->getMessage());
 
-                $customers = CustomerData::select('id', 'nopol', 'nama', 'norak', 'nosin', 'tipe', 'finance_branch_id', 'is_active')
-                    ->with(['financeBranch' => function($query) {
-                        $query->select('id', 'location_master_id')
-                              ->with('locationMaster:id,name');
-                    }])
-                    ->where('is_active', true)
+                // Fallback tetap menggunakan Join agar tidak lambat
+                $customers = CustomerData::query()
+                    ->leftJoin('finance_branches', 'customer_data.finance_branch_id', '=', 'finance_branches.id')
+                    ->leftJoin('location_masters', 'finance_branches.location_master_id', '=', 'location_masters.id')
+                    ->select(
+                        'customer_data.id',
+                        'customer_data.nopol',
+                        'customer_data.nama',
+                        'customer_data.tipe',
+                        'location_masters.name as location_name'
+                    )
+                    ->where('customer_data.is_active', true)
                     ->when(! empty($search), function($q) use ($search) {
-                        return $q->where('nopol', 'LIKE', "%{$search}%");
+                        return $q->where('customer_data.nopol', 'LIKE', "%{$search}%");
                     })
                     ->limit(10)
                     ->get();
