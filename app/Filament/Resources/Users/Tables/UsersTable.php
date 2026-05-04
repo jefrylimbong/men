@@ -51,7 +51,7 @@ class UsersTable
             ])
             ->actions([
                 EditAction::make(),
-                \Filament\Tables\Actions\Action::make('resetPassword')
+                \Filament\Actions\Action::make('resetPassword')
                     ->label('Reset Pass')
                     ->color('warning')
                     ->icon('heroicon-m-key')
