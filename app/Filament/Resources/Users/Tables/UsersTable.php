@@ -51,6 +51,24 @@ class UsersTable
             ])
             ->actions([
                 EditAction::make(),
+                \Filament\Tables\Actions\Action::make('resetPassword')
+                    ->label('Reset Pass')
+                    ->color('warning')
+                    ->icon('heroicon-m-key')
+                    ->requiresConfirmation()
+                    ->modalHeading('Reset Password')
+                    ->modalDescription('Apakah Anda yakin ingin mereset password user ini menjadi 123456?')
+                    ->action(function ($record) {
+                        $record->update([
+                            'password' => \Illuminate\Support\Facades\Hash::make('123456'),
+                        ]);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Berhasil')
+                            ->body('Password berhasil direset menjadi 123456.')
+                            ->send();
+                    }),
                 DeleteAction::make()
                     ->before(function (DeleteAction $action, $record) {
                         $hasReferences = WithdrawalData::where('user_id', $record->id)->exists() ||
