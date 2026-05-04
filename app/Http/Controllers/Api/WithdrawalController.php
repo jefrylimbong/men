@@ -15,10 +15,19 @@ class WithdrawalController extends Controller
      */
     public function index(Request $request)
     {
-        $withdrawals = WithdrawalData::with(['customerData', 'vendor'])
-            ->where('user_id', $request->user()->id)
-            ->latest()
-            ->paginate(20);
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+
+        $query = WithdrawalData::with(['customerData', 'vendor'])
+            ->where('user_id', $request->user()->id);
+
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        } else {
+            $query->whereDate('created_at', now()->today());
+        }
+
+        $withdrawals = $query->latest()->get(); // Menggunakan get() agar semua muncul di daftar tugas harian
 
         return response()->json([
             'status' => 'success',
@@ -91,6 +100,17 @@ class WithdrawalController extends Controller
                 'finances' => $finances,
                 'vendors' => $vendors,
             ],
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $withdrawal = WithdrawalData::where('user_id', auth()->id())->findOrFail($id);
+        $withdrawal->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Tugas berhasil dihapus',
         ]);
     }
 }

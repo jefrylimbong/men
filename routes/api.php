@@ -26,6 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/withdrawals', [WithdrawalController::class, 'index']);
     Route::post('/withdrawals', [WithdrawalController::class, 'store']);
     Route::put('/withdrawals/{id}', [WithdrawalController::class, 'update']);
+    Route::delete('/withdrawals/{id}', [WithdrawalController::class, 'destroy']);
     Route::get('/withdrawals/masters', [WithdrawalController::class, 'getMasters']);
 
     // Rute untuk Android Action History
