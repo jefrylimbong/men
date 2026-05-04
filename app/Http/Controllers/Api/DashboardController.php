@@ -81,7 +81,7 @@ class DashboardController extends Controller
             ->map(function ($w) {
                 return [
                     'id' => $w->id,
-                    'date' => $w->withdrawal_date->format('M d, Y'),
+                    'date' => $w->withdrawal_date ? $w->withdrawal_date->format('M d, Y') : '-',
                     'customer' => $w->customerData->nama ?? '-',
                     'nopol' => $w->customerData->nopol ?? '-',
                     'vendor' => $w->vendor->nama ?? '-',

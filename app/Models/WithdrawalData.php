@@ -25,6 +25,7 @@ class WithdrawalData extends Model
     protected $casts = [
         'is_finance_paid' => 'boolean',
         'finance_deadline' => 'date',
+        'withdrawal_date' => 'datetime',
     ];
 
     public function bastk()
