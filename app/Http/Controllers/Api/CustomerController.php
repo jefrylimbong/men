@@ -23,35 +23,37 @@ class CustomerController extends Controller
             }])
             ->where('is_active', true);
 
-        // Realtime online search filter
-        if ($request->has('search') && ! empty($request->search)) {
-            $search = $request->search;
-            $searchBy = $request->searchBy ?? 'semua';
-
-            // Optimasi: Gunakan Full-Text Search jika tersedia (lebih cepat dari LIKE %...%)
-            // Kita tambahkan wildcard '*' di akhir untuk mendukung partial match
-            $searchTerm = $search . '*';
-
-            try {
-                // Fokus hanya pada nopol agar pencarian sangat cepat
-                $baseQuery->whereFullText('nopol', $searchTerm, ['mode' => 'boolean']);
-            } catch (\Exception $e) {
-                // Catat error ke log agar bisa dianalisa
-                \Log::error("Search error: " . $e->getMessage());
-
-                // Fallback: Jika index Full-Text belum dibuat, gunakan LIKE biasa
-                $baseQuery->where('nopol', 'LIKE', "%{$search}%");
-            }
-        }
-
         $assignedFinanceIds = $user ? $user->financeMasters()->pluck('finance_masters.id') : collect();
 
         if (! $isSync) {
-            // Pencarian Online: Buka akses untuk semua data aktif tanpa filter cabang
-            // Optimasi: Hapus latest() karena order by created_at sangat lambat jika data banyak
-            $customers = $baseQuery
-                ->limit(10)
-                ->get();
+            $search = $request->input('search', '');
+            
+            if (! empty($search)) {
+                $searchTerm = $search . '*';
+                $baseQuery->whereFullText('nopol', $searchTerm, ['mode' => 'boolean']);
+            }
+
+            try {
+                $customers = $baseQuery
+                    ->limit(10)
+                    ->get();
+            } catch (\Exception $e) {
+                // Jika Full-Text gagal (indeks belum ada), gunakan LIKE biasa
+                \Log::error("Full-Text Search failed, falling back to LIKE: " . $e->getMessage());
+                
+                $fallbackQuery = CustomerData::select('id', 'nopol', 'nama', 'norak', 'nosin', 'tipe', 'finance_branch_id', 'is_active')
+                    ->with(['financeBranch' => function($query) {
+                        $query->select('id', 'location_master_id')
+                              ->with('locationMaster:id,name');
+                    }])
+                    ->where('is_active', true);
+
+                if (! empty($search)) {
+                    $fallbackQuery->where('nopol', 'LIKE', "%{$search}%");
+                }
+
+                $customers = $fallbackQuery->limit(10)->get();
+            }
         } else {
             // Sinkronisasi: Tetap gunakan filter cabang (kecuali superadmin)
             if ($user && $user->type === 'superadmin') {
