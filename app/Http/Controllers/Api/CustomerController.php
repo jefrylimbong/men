@@ -15,9 +15,12 @@ class CustomerController extends Controller
         $user = $request->user();
         $isSync = $request->has('is_sync') && $request->is_sync == 'true';
 
-        // Optimasi: Hanya ambil kolom yang dibutuhkan untuk sinkronisasi
+        // Optimasi: Hanya ambil kolom yang dibutuhkan
         $baseQuery = CustomerData::select('id', 'nopol', 'nama', 'norak', 'nosin', 'tipe', 'finance_branch_id', 'is_active')
-            ->with(['financeBranch:id,location_master_id', 'financeBranch.locationMaster:id,name'])
+            ->with(['financeBranch' => function($query) {
+                $query->select('id', 'location_master_id')
+                      ->with('locationMaster:id,name');
+            }])
             ->where('is_active', true);
 
         // Realtime online search filter
@@ -33,7 +36,10 @@ class CustomerController extends Controller
                 // Fokus hanya pada nopol agar pencarian sangat cepat
                 $baseQuery->whereFullText('nopol', $searchTerm, ['mode' => 'boolean']);
             } catch (\Exception $e) {
-                // Fallback: Jika index Full-Text belum dibuat (misal di produksi belum migrate), gunakan LIKE biasa
+                // Catat error ke log agar bisa dianalisa
+                \Log::error("Search error: " . $e->getMessage());
+
+                // Fallback: Jika index Full-Text belum dibuat, gunakan LIKE biasa
                 $baseQuery->where('nopol', 'LIKE', "%{$search}%");
             }
         }
