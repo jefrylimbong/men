@@ -49,6 +49,8 @@ class ActionHistoryController extends Controller
 
         return response()->json([
             'status' => 'success',
+            'debug_user_id' => $user->id,
+            'debug_user_name' => $user->name,
             'data' => $histories,
         ]);
     }
