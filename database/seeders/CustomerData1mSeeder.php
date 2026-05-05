@@ -15,7 +15,7 @@ class CustomerData1mSeeder extends Seeder
     public function run(): void
     {
         $total = 1000000;
-        $chunkSize = 5000;
+        $chunkSize = 1000;
 
         $financeBranchIds = FinanceBranch::pluck('id')->toArray();
         if (empty($financeBranchIds)) {
