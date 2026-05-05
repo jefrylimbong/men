@@ -88,10 +88,12 @@ class CustomerController extends Controller
                     'location_masters.name as location_name'
                 )
                 ->where('customer_data.is_active', true)
-                ->when($lastSync, function ($q) use ($lastSync) {
+                ->when($lastSync && $lastId > 0, function ($q) use ($lastSync) {
+                    // Hanya gunakan filter waktu jika ini adalah sinkronisasi inkremental (ID > 0)
                     return $q->where('customer_data.created_at', '>', $lastSync);
                 })
-                ->when(!$lastSync && $lastId > 0, function ($q) use ($lastId) {
+                ->when($lastId > 0 && !$lastSync, function ($q) use ($lastId) {
+                    // Fallback jika last_sync kosong tapi ada lastId
                     return $q->where('customer_data.id', '>', $lastId);
                 })
                 ->oldest('customer_data.id')
