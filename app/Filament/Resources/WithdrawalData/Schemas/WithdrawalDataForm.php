@@ -241,6 +241,7 @@ class WithdrawalDataForm
                         DatePicker::make('finance_deadline')
                             ->label('Deadline Pembayaran Finance')
                             ->visible(fn ($get) => ! $get('is_finance_paid'))
+                            ->required(fn ($get) => ! $get('is_finance_paid'))
                             ->helperText('Trigger tanggal jatuh tempo untuk finance')
                             ->columnSpan(1),
                     ])->columns(2),
