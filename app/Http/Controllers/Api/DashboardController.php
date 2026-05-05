@@ -73,10 +73,10 @@ class DashboardController extends Controller
             ->groupBy('status')
             ->get();
 
-        // Recent Withdrawals
+        // Recent Withdrawals (Today Only)
         $recentWithdrawals = WithdrawalData::with(['customerData', 'vendor'])
+            ->whereDate('created_at', now()->today())
             ->latest()
-            ->limit(10)
             ->get()
             ->map(function ($w) {
                 return [
