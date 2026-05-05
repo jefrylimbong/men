@@ -181,23 +181,42 @@ class WithdrawalDataForm
                             ->columnSpan(1),
                         TextInput::make('handling_fee')
                             ->label('Biaya Penanganan')
-                            ->numeric()
                             ->prefix('Rp')
+                            ->extraAttributes(['x-mask' => '9.999.999.999.999'])
+                            ->afterStateHydrated(function ($state, $set) {
+                                if ($state) {
+                                    $set('handling_fee', number_format((float) $state, 0, ',', '.'));
+                                }
+                            })
+                            ->dehydrateStateUsing(fn ($state) => $state ? str_replace('.', '', (string) $state) : 0)
                             ->reactive()
                             ->columnSpan(1),
                         TextInput::make('bailout_amount')
                             ->label('Dana Talangan Vendor')
-                            ->numeric()
                             ->prefix('Rp')
+                            ->extraAttributes(['x-mask' => '9.999.999.999.999'])
+                            ->afterStateHydrated(function ($state, $set) {
+                                if ($state) {
+                                    $set('bailout_amount', number_format((float) $state, 0, ',', '.'));
+                                }
+                            })
+                            ->dehydrateStateUsing(fn ($state) => $state ? str_replace('.', '', (string) $state) : 0)
                             ->reactive()
                             ->afterStateUpdated(function ($state, $set) {
-                                $set('vendor_fee', $state ? $state * 0.1 : 0);
+                                $cleanState = $state ? (float) str_replace('.', '', (string) $state) : 0;
+                                $set('vendor_fee', number_format($cleanState * 0.1, 0, ',', '.'));
                             })
                             ->columnSpan(1),
                         TextInput::make('vendor_fee')
                             ->label('Fee Vendor (10%)')
-                            ->numeric()
                             ->prefix('Rp')
+                            ->extraAttributes(['x-mask' => '9.999.999.999.999'])
+                            ->afterStateHydrated(function ($state, $set) {
+                                if ($state) {
+                                    $set('vendor_fee', number_format((float) $state, 0, ',', '.'));
+                                }
+                            })
+                            ->dehydrateStateUsing(fn ($state) => $state ? str_replace('.', '', (string) $state) : 0)
                             ->reactive()
                             ->helperText('Default 10%, bisa diubah manual')
                             ->columnSpan(1),
@@ -205,10 +224,13 @@ class WithdrawalDataForm
                         Placeholder::make('summary')
                             ->label('Ringkasan Estimasi Profit')
                             ->content(function ($get) {
-                                $estCair = (float) $get('estimated_payout') ?: 0;
-                                $talangan = (float) $get('bailout_amount') ?: 0;
-                                $feeVendor = (float) $get('vendor_fee') ?: 0;
-                                $handling = (float) $get('handling_fee') ?: 0;
+                                // Fungsi pembantu untuk membersihkan format titik/masking
+                                $clean = fn ($val) => (float) str_replace('.', '', (string) $val);
+
+                                $estCair = $clean($get('estimated_payout'));
+                                $talangan = $clean($get('bailout_amount'));
+                                $feeVendor = $clean($get('vendor_fee'));
+                                $handling = $clean($get('handling_fee'));
 
                                 $totalVendor = $talangan + $feeVendor;
                                 $profitBersih = $estCair - $totalVendor - $handling;
@@ -234,8 +256,14 @@ class WithdrawalDataForm
                             ->columnSpanFull(),
                         TextInput::make('finance_payout')
                             ->label('Nominal Cair Finance (Aktual)')
-                            ->numeric()
                             ->prefix('Rp')
+                            ->extraAttributes(['x-mask' => '9.999.999.999.999'])
+                            ->afterStateHydrated(function ($state, $set) {
+                                if ($state) {
+                                    $set('finance_payout', number_format((float) $state, 0, ',', '.'));
+                                }
+                            })
+                            ->dehydrateStateUsing(fn ($state) => $state ? str_replace('.', '', (string) $state) : 0)
                             ->visible(fn ($get) => $get('is_finance_paid'))
                             ->columnSpan(1),
                         DatePicker::make('finance_deadline')
