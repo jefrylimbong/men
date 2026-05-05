@@ -63,6 +63,7 @@ class WithdrawalDataTable
                         default => 'gray',
                     }),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 SelectFilter::make('vendor_id')
                     ->relationship('vendor', 'nama')
