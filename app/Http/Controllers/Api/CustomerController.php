@@ -62,10 +62,12 @@ class CustomerController extends Controller
                     ->limit(10)->get();
             }
         } else {
-            // Sinkronisasi: Tetap gunakan filter cabang (kecuali superadmin)
-            if ($user && $user->type === 'superadmin') {
+            // Sinkronisasi: Cek hak akses
+            if (($user && $user->type === 'superadmin') || $assignedFinanceIds->isEmpty()) {
+                // Jika superadmin ATAU tidak ada finance yang di-assign, berikan akses SEMUA data
                 $query = CustomerData::query();
             } else {
+                // Jika ada yang di-assign, filter berdasarkan finance tersebut
                 $branchIds = FinanceBranch::whereIn('finance_master_id', $assignedFinanceIds)->pluck('id');
                 $query = CustomerData::whereIn('finance_branch_id', $branchIds);
             }
