@@ -21,6 +21,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Rute untuk Update Profil dan Password dari Flutter
     Route::post('/user/update', [AuthController::class, 'updateProfile']);
     Route::post('/user/password', [AuthController::class, 'updatePassword']);
+    Route::post('/user/last-sync', [AuthController::class, 'updateLastSync']);
 
     // Rute untuk Penarikan Kendaraan (Field Worker)
     Route::get('/withdrawals', [WithdrawalController::class, 'index']);

@@ -20,16 +20,23 @@ class ActionHistoryController extends Controller
             'address' => 'nullable|string',
         ]);
 
-        $history = AndroidActionHistory::create([
+        $historyData = [
             'user_id' => $request->user()->id,
-            'name' => $validated['name'],
+            'name' => $validated['name'] ?? null,
             'action' => $validated['action'],
-            'description' => $validated['description'],
+            'description' => $validated['description'] ?? null,
             'duration_seconds' => $validated['duration_seconds'] ?? 0,
             'latitude' => $validated['latitude'] ?? null,
             'longitude' => $validated['longitude'] ?? null,
             'address' => $validated['address'] ?? null,
-        ]);
+        ];
+
+        // Jika ada created_at manual (dari offline sync), gunakan itu
+        if ($request->has('created_at')) {
+            $historyData['created_at'] = $request->created_at;
+        }
+
+        $history = AndroidActionHistory::create($historyData);
 
         return response()->json([
             'status' => 'success',

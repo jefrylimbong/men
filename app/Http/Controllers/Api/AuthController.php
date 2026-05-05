@@ -127,4 +127,17 @@ class AuthController extends Controller
             'message' => 'Password berhasil diubah',
         ]);
     }
+
+    public function updateLastSync(Request $request)
+    {
+        $user = $request->user();
+        $user->last_sync = now();
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Last sync updated',
+            'last_sync' => $user->last_sync
+        ]);
+    }
 }

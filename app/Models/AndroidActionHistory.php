@@ -15,6 +15,7 @@ class AndroidActionHistory extends Model
         'latitude',
         'longitude',
         'address',
+        'created_at',
     ];
 
     public function user()

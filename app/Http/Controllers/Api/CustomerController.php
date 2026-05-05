@@ -71,6 +71,8 @@ class CustomerController extends Controller
             }
 
             $lastId = $request->input('last_id', 0);
+            $lastSync = $user->last_sync;
+
             $customers = $query
                 ->join('finance_branches', 'customer_data.finance_branch_id', '=', 'finance_branches.id')
                 ->join('finance_masters', 'finance_branches.finance_master_id', '=', 'finance_masters.id')
@@ -86,7 +88,12 @@ class CustomerController extends Controller
                     'location_masters.name as location_name'
                 )
                 ->where('customer_data.is_active', true)
-                ->where('customer_data.id', '>', $lastId)
+                ->when($lastSync, function ($q) use ($lastSync) {
+                    return $q->where('customer_data.created_at', '>', $lastSync);
+                })
+                ->when(!$lastSync && $lastId > 0, function ($q) use ($lastId) {
+                    return $q->where('customer_data.id', '>', $lastId);
+                })
                 ->oldest('customer_data.id')
                 ->simplePaginate(2000);
         }
