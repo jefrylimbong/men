@@ -40,7 +40,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function financeMasters(): BelongsToMany
     {
-        return $this->belongsToMany(FinanceMaster::class);
+        return $this->belongsToMany(FinanceMaster::class)->withTimestamps();
     }
 
     /**

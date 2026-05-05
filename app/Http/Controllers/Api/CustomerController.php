@@ -97,7 +97,7 @@ class CustomerController extends Controller
                     return $q->where('customer_data.id', '>', $lastId);
                 })
                 ->oldest('customer_data.id')
-                ->simplePaginate(2000);
+                ->simplePaginate(5000);
         }
 
         // Jika response bukan paginator (untuk online search), buat array structure agar tetap kompatibel
