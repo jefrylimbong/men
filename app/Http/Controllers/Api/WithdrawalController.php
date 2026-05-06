@@ -52,7 +52,7 @@ class WithdrawalController extends Controller
             'customer_data_id' => $validated['customer_data_id'],
             'user_id' => $request->user()->id,
             'vendor_id' => $validated['vendor_id'] ?? null,
-            'status' => 'pending', // Paksa status jadi pending saat masuk dari aplikasi
+            'status' => $validated['status'],
             'withdrawal_date' => $validated['withdrawal_date'] ?? now(),
             'bailout_amount' => $validated['bailout_amount'] ?? 0,
         ]);
