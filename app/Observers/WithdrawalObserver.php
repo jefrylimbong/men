@@ -13,7 +13,7 @@ class WithdrawalObserver
      */
     public function created(WithdrawalData $withdrawalData): void
     {
-        //
+        $this->syncTransactions($withdrawalData);
     }
 
     /**
@@ -21,7 +21,14 @@ class WithdrawalObserver
      */
     public function updated(WithdrawalData $withdrawalData): void
     {
-        // Jika status berubah menjadi 'validated' (Tervalidasi)
+        $this->syncTransactions($withdrawalData);
+    }
+
+    /**
+     * Sync finance transactions based on withdrawal data.
+     */
+    private function syncTransactions(WithdrawalData $withdrawalData): void
+    {
         // Jika status 'validated' atau 'paid'
         if (in_array($withdrawalData->status, ['validated', 'paid'])) {
 
@@ -48,7 +55,9 @@ class WithdrawalObserver
 
             // 2. Catat Piutang PT ke Finance (Dana yang akan cair)
             $finance = $withdrawalData->customerData->financeBranch->financeMaster ?? null;
-            if ($finance && $withdrawalData->finance_payout > 0) {
+            $billingAmount = $withdrawalData->is_finance_paid ? $withdrawalData->finance_payout : $withdrawalData->estimated_payout;
+
+            if ($finance && $billingAmount > 0) {
                 FinanceTransaction::updateOrCreate(
                     [
                         'reference_id' => $withdrawalData->id,
@@ -58,7 +67,7 @@ class WithdrawalObserver
                     ],
                     [
                         'transaction_date' => $withdrawalData->withdrawal_date ?? now(),
-                        'amount' => $withdrawalData->finance_payout,
+                        'amount' => $billingAmount,
                         'credit_type' => 'PT',
                         'credit_id' => 0,
                         'description' => 'Tagihan jasa penarikan unit '.($withdrawalData->customerData->nopol ?? '-'),
