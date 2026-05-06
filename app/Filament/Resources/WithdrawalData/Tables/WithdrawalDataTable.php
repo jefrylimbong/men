@@ -106,7 +106,10 @@ class WithdrawalDataTable
                     }),
             ])
             ->actions([
-                EditAction::make()->label('Proses'),
+                EditAction::make()
+                    ->label('Proses')
+                    ->icon('heroicon-m-arrow-path-horizontal')
+                    ->color('primary'),
                 DeleteAction::make(),
             ])
             ->bulkActions([
