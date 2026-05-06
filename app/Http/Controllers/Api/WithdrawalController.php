@@ -22,7 +22,7 @@ class WithdrawalController extends Controller
             ->where('user_id', $request->user()->id);
 
         if ($startDate && $endDate) {
-            $query->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+            $query->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         } else {
             $query->whereDate('created_at', now()->today());
         }
@@ -52,7 +52,7 @@ class WithdrawalController extends Controller
             'customer_data_id' => $validated['customer_data_id'],
             'user_id' => $request->user()->id,
             'vendor_id' => $validated['vendor_id'] ?? null,
-            'status' => $validated['status'],
+            'status' => 'pending', // Paksa status jadi pending saat masuk dari aplikasi
             'withdrawal_date' => $validated['withdrawal_date'] ?? now(),
             'bailout_amount' => $validated['bailout_amount'] ?? 0,
         ]);

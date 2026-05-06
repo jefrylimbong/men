@@ -27,26 +27,30 @@ class WithdrawalObserver
     /**
      * Sync finance transactions based on withdrawal data.
      */
+    /**
+     * Sync finance transactions based on withdrawal data.
+     */
     private function syncTransactions(WithdrawalData $withdrawalData): void
     {
         // Jika status 'validated' atau 'paid'
         if (in_array($withdrawalData->status, ['validated', 'paid'])) {
 
             // 1. Catat Hutang PT ke Vendor (Dana Talangan + Fee Vendor)
+            // Konteks: Vendor memberikan dana (Talangan), PT menerima kewajiban bayar
             if ($withdrawalData->vendor_id && ($withdrawalData->bailout_amount > 0 || $withdrawalData->vendor_fee > 0)) {
                 $totalVendor = $withdrawalData->bailout_amount + $withdrawalData->vendor_fee;
                 FinanceTransaction::updateOrCreate(
                     [
                         'reference_id' => $withdrawalData->id,
                         'category' => 'penarikan',
-                        'credit_type' => 'Vendor',
-                        'credit_id' => $withdrawalData->vendor_id,
+                        'debit_type' => 'Vendor', // Tujuan (Hutang yang harus dibayar ke Vendor)
                     ],
                     [
                         'transaction_date' => $withdrawalData->withdrawal_date ?? now(),
                         'amount' => $totalVendor,
-                        'debit_type' => 'PT',
-                        'debit_id' => 0,
+                        'credit_type' => 'PT', // Sumber (Uang keluar dari PT nanti)
+                        'credit_id' => 0,
+                        'debit_id' => $withdrawalData->vendor_id,
                         'description' => 'Hutang penarikan unit '.($withdrawalData->customerData->nopol ?? '-').' (Talangan + Fee)',
                         'status' => 'pending',
                     ]
@@ -54,6 +58,7 @@ class WithdrawalObserver
             }
 
             // 2. Catat Piutang PT ke Finance (Dana yang akan cair)
+            // Konteks: PT menerima uang dari Finance
             $finance = $withdrawalData->customerData->financeBranch->financeMaster ?? null;
             $billingAmount = $withdrawalData->is_finance_paid ? $withdrawalData->finance_payout : $withdrawalData->estimated_payout;
 
@@ -62,14 +67,14 @@ class WithdrawalObserver
                     [
                         'reference_id' => $withdrawalData->id,
                         'category' => 'billing',
-                        'debit_type' => 'Finance',
-                        'debit_id' => $finance->id,
+                        'credit_type' => 'Finance', // Sumber uang
                     ],
                     [
                         'transaction_date' => $withdrawalData->withdrawal_date ?? now(),
                         'amount' => $billingAmount,
-                        'credit_type' => 'PT',
-                        'credit_id' => 0,
+                        'debit_type' => 'PT', // Penerima uang
+                        'debit_id' => 0,
+                        'credit_id' => $finance->id,
                         'description' => 'Tagihan jasa penarikan unit '.($withdrawalData->customerData->nopol ?? '-'),
                         'status' => $withdrawalData->is_finance_paid ? 'completed' : 'pending',
                     ]
@@ -77,20 +82,21 @@ class WithdrawalObserver
             }
 
             // 3. Catat Biaya Penanganan (Handling Fee)
+            // Konteks: Pemasukan operasional PT
             if ($withdrawalData->handling_fee > 0) {
                 FinanceTransaction::updateOrCreate(
                     [
                         'reference_id' => $withdrawalData->id,
                         'category' => 'operational',
-                        'description' => 'Biaya penanganan unit '.($withdrawalData->customerData->nopol ?? '-'),
                     ],
                     [
                         'transaction_date' => $withdrawalData->withdrawal_date ?? now(),
                         'amount' => $withdrawalData->handling_fee,
-                        'debit_type' => 'PT',
+                        'debit_type' => 'PT', // PT menerima fee
                         'debit_id' => 0,
-                        'credit_type' => 'PT',
-                        'credit_id' => 0, // Operasional internal
+                        'credit_type' => 'Internal', // Dari sumber internal operasional
+                        'credit_id' => 0,
+                        'description' => 'Biaya penanganan unit '.($withdrawalData->customerData->nopol ?? '-'),
                         'status' => 'completed',
                     ]
                 );

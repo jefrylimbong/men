@@ -106,7 +106,7 @@ class WithdrawalDataTable
                     }),
             ])
             ->actions([
-                EditAction::make(),
+                EditAction::make()->label('Proses'),
                 DeleteAction::make(),
             ])
             ->bulkActions([
