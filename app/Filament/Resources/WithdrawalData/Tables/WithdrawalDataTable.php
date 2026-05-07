@@ -108,7 +108,7 @@ class WithdrawalDataTable
             ->actions([
                 EditAction::make()
                     ->label('Proses')
-                    ->icon('heroicon-m-arrow-path-horizontal')
+                    ->icon('heroicon-m-arrow-path')
                     ->color('primary'),
                 DeleteAction::make(),
             ])
