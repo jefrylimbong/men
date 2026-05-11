@@ -90,12 +90,19 @@ class UserForm
                                 ->helperText('Berapa banyak data yang bisa diakses user di Flutter'),
                             Select::make('type')
                                 ->label('Tipe User')
-                                ->options([
-                                    'superadmin' => 'Super Admin',
-                                    'admin' => 'Admin',
-                                    'operator' => 'Operator',
-                                    'user' => 'User',
-                                ])
+                                ->options(function () {
+                                    $options = [
+                                        'admin' => 'Admin',
+                                        'operator' => 'Operator',
+                                        'user' => 'User',
+                                    ];
+
+                                    if (auth()->user()?->type === 'superadmin') {
+                                        return ['superadmin' => 'Super Admin'] + $options;
+                                    }
+
+                                    return $options;
+                                })
                                 ->required()
                                 ->live(),
 

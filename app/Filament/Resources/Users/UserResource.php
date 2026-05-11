@@ -11,10 +11,23 @@ use App\Models\User;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        // Admin tidak bisa melihat akun superadmin
+        if (auth()->user()->type === 'admin') {
+            return $query->where('type', '!=', 'superadmin');
+        }
+
+        return $query;
+    }
 
     protected static string|\UnitEnum|null $navigationGroup = 'Manajemen User';
 

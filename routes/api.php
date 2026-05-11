@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\ActionHistoryController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\LogController;
 use App\Http\Controllers\Api\WithdrawalController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -22,6 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/user/update', [AuthController::class, 'updateProfile']);
     Route::post('/user/password', [AuthController::class, 'updatePassword']);
     Route::post('/user/last-sync', [AuthController::class, 'updateLastSync']);
+    Route::post('/log-error', [LogController::class, 'logError']);
 
     // Rute untuk Penarikan Kendaraan (Field Worker)
     Route::get('/withdrawals', [WithdrawalController::class, 'index']);
