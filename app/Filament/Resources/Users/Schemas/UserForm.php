@@ -202,6 +202,9 @@ class UserForm
                                 ->action(function (Set $set) {
                                     foreach (static::$resources as $resource => $label) {
                                         $set("permissions.$resource", []);
+                                        foreach (['view', 'create', 'update', 'delete'] as $type) {
+                                            $set("checkbox_{$resource}_{$type}", false);
+                                        }
                                     }
                                 }),
                         ]),
@@ -213,8 +216,9 @@ class UserForm
     {
         $current = $get('permissions') ?? [];
         $allChecked = true;
+        $prefix = $type === 'create' ? 'create' : ($type === 'update' ? 'update' : $type);
+
         foreach (static::$resources as $resource => $label) {
-            $prefix = $type === 'create' ? 'create' : ($type === 'update' ? 'update' : $type);
             if (! in_array("{$prefix}_{$resource}", $current[$resource] ?? [])) {
                 $allChecked = false;
                 break;
@@ -222,12 +226,13 @@ class UserForm
         }
 
         foreach (static::$resources as $resource => $label) {
-            $prefix = $type === 'create' ? 'create' : ($type === 'update' ? 'update' : $type);
             $resPerms = $current[$resource] ?? [];
             if ($allChecked) {
                 $set("permissions.$resource", array_diff($resPerms, ["{$prefix}_{$resource}"]));
+                $set("checkbox_{$resource}_{$type}", false);
             } else {
                 $set("permissions.$resource", array_unique(array_merge($resPerms, ["{$prefix}_{$resource}"])));
+                $set("checkbox_{$resource}_{$type}", true);
             }
         }
     }
