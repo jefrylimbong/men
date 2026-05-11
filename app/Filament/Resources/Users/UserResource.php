@@ -22,7 +22,7 @@ class UserResource extends Resource
         $query = parent::getEloquentQuery();
 
         // Admin tidak bisa melihat akun superadmin
-        if (auth()->user()->type === 'admin') {
+        if (auth()->user()?->type === 'admin') {
             return $query->where('type', '!=', 'superadmin');
         }
 

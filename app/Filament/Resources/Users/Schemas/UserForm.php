@@ -24,13 +24,14 @@ class UserForm
         'CustomerData' => 'Data Customer',
         'WithdrawalData' => 'Data Penarikan',
         'BastkRegisters' => 'Bastk Register',
-        'UnpaidBastks' => 'Unpaid Bastk',
-        'PaidBastks' => 'Paid Bastk',
         'LocationMasters' => 'Master Lokasi',
         'FinanceMasters' => 'Master Finance',
         'FinanceBranches' => 'Cabang Finance',
         'FinanceSearches' => 'Pencarian Finance',
+        'FinanceTransactions' => 'Transaksi Kas',
+        'Vendors' => 'Vendor / Jasa Penarikan',
         'AndroidActionHistories' => 'Histori Aksi Android',
+        'AppErrors' => 'Laporan Error (Crashes)',
     ];
 
     public static function configure(Schema $schema): Schema
