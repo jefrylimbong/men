@@ -20,6 +20,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Alignment;
 
 class UserForm
 {
@@ -143,7 +144,7 @@ class UserForm
                                         ->color('success')
                                         ->button()
                                         ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'view')),
-                                ])->extraAttributes(['class' => 'justify-center']),
+                                ])->alignment(Alignment::Center),
                                 Actions::make([
                                     Action::make('all_add')
                                         ->label('Add All')
@@ -151,7 +152,7 @@ class UserForm
                                         ->color('info')
                                         ->button()
                                         ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'create')),
-                                ])->extraAttributes(['class' => 'justify-center']),
+                                ])->alignment(Alignment::Center),
                                 Actions::make([
                                     Action::make('all_edit')
                                         ->label('Edit All')
@@ -159,7 +160,7 @@ class UserForm
                                         ->color('warning')
                                         ->button()
                                         ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'update')),
-                                ])->extraAttributes(['class' => 'justify-center']),
+                                ])->alignment(Alignment::Center),
                                 Actions::make([
                                     Action::make('all_delete')
                                         ->label('Del All')
@@ -167,7 +168,7 @@ class UserForm
                                         ->color('danger')
                                         ->button()
                                         ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'delete')),
-                                ])->extraAttributes(['class' => 'justify-center']),
+                                ])->alignment(Alignment::Center),
                             ]),
 
                         // Resource Rows
@@ -244,7 +245,7 @@ class UserForm
 
         return Checkbox::make("checkbox_{$resource}_{$type}")
             ->hiddenLabel()
-            ->extraAttributes(['class' => 'flex justify-center'])
+            ->extraAttributes(['class' => 'flex justify-center w-full'])
             ->formatStateUsing(fn (Get $get) => in_array($permissionString, $get("permissions.$resource") ?? []))
             ->live()
             ->afterStateUpdated(function ($state, Set $set, Get $get) use ($resource, $permissionString) {
