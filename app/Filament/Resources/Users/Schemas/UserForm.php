@@ -246,6 +246,7 @@ class UserForm
         return SchemaGroup::make([
             Checkbox::make("checkbox_{$resource}_{$type}")
                 ->hiddenLabel()
+                ->extraAttributes(['class' => '!flex !justify-center !w-full'])
                 ->formatStateUsing(fn (Get $get) => in_array($permissionString, $get("permissions.$resource") ?? []))
                 ->live()
                 ->afterStateUpdated(function ($state, Set $set, Get $get) use ($resource, $permissionString) {
@@ -256,6 +257,6 @@ class UserForm
                         $set("permissions.$resource", array_diff($current, [$permissionString]));
                     }
                 }),
-        ])->extraAttributes(['class' => 'flex justify-center w-full']);
+        ])->extraAttributes(['class' => '!flex !justify-center !w-full']);
     }
 }
