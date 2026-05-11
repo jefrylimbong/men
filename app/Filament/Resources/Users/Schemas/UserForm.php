@@ -141,10 +141,10 @@ class UserForm
                                             }
                                         }),
                                 ])
-                                ->schema(function () {
+                                ->schema(function (Get $get) {
                                     $checkboxes = [];
                                     foreach (static::$resources as $resource => $label) {
-                                        $checkboxes[] = static::getPermissionCheckbox($resource, $label);
+                                        $checkboxes[] = static::getPermissionCheckbox($resource, $label, $get);
                                     }
 
                                     return $checkboxes;
@@ -154,10 +154,17 @@ class UserForm
             ])->columns(2);
     }
 
-    protected static function getPermissionCheckbox(string $resource, string $label): CheckboxList
+    protected static function getPermissionCheckbox(string $resource, string $label, Get $get): CheckboxList
     {
         return CheckboxList::make("permissions.$resource")
             ->label($label)
+            ->visible(function () use ($resource, $get) {
+                if ($resource === 'AppErrors') {
+                    return auth()->user()?->type === 'superadmin' && $get('type') === 'superadmin';
+                }
+
+                return true;
+            })
             ->options([
                 "view_$resource" => 'View',
                 "create_$resource" => 'Add',
