@@ -2,7 +2,8 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
-use Filament\Actions\Action;
+use Filament\Forms\Components\Actions;
+use Filament\Forms\Components\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
@@ -133,32 +134,40 @@ class UserForm
                         Grid::make(5)
                             ->schema([
                                 Placeholder::make('menu_label')
-                                    ->label('Nama Menu')
-                                    ->content(''),
-                                Action::make('all_view')
-                                    ->label('View All')
-                                    ->icon('heroicon-m-eye')
-                                    ->color('success')
-                                    ->button()
-                                    ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'view')),
-                                Action::make('all_add')
-                                    ->label('Add All')
-                                    ->icon('heroicon-m-plus-circle')
-                                    ->color('info')
-                                    ->button()
-                                    ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'create')),
-                                Action::make('all_edit')
-                                    ->label('Edit All')
-                                    ->icon('heroicon-m-pencil-square')
-                                    ->color('warning')
-                                    ->button()
-                                    ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'update')),
-                                Action::make('all_delete')
-                                    ->label('Del All')
-                                    ->icon('heroicon-m-trash')
-                                    ->color('danger')
-                                    ->button()
-                                    ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'delete')),
+                                    ->hiddenLabel()
+                                    ->content('Nama Menu'),
+                                Actions::make([
+                                    Action::make('all_view')
+                                        ->label('View All')
+                                        ->icon('heroicon-m-eye')
+                                        ->color('success')
+                                        ->button()
+                                        ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'view')),
+                                ]),
+                                Actions::make([
+                                    Action::make('all_add')
+                                        ->label('Add All')
+                                        ->icon('heroicon-m-plus-circle')
+                                        ->color('info')
+                                        ->button()
+                                        ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'create')),
+                                ]),
+                                Actions::make([
+                                    Action::make('all_edit')
+                                        ->label('Edit All')
+                                        ->icon('heroicon-m-pencil-square')
+                                        ->color('warning')
+                                        ->button()
+                                        ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'update')),
+                                ]),
+                                Actions::make([
+                                    Action::make('all_delete')
+                                        ->label('Del All')
+                                        ->icon('heroicon-m-trash')
+                                        ->color('danger')
+                                        ->button()
+                                        ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'delete')),
+                                ]),
                             ]),
 
                         // Resource Rows
@@ -174,7 +183,7 @@ class UserForm
                                     })
                                     ->schema([
                                         Placeholder::make("label_$resource")
-                                            ->label('')
+                                            ->hiddenLabel()
                                             ->content($label),
                                         static::getPermissionToggle($resource, 'view'),
                                         static::getPermissionToggle($resource, 'create'),
@@ -184,16 +193,18 @@ class UserForm
                             })->toArray(),
                         ]),
 
-                        Action::make('reset_all')
-                            ->label('Reset Semua Izin')
-                            ->icon('heroicon-m-x-circle')
-                            ->color('gray')
-                            ->link()
-                            ->action(function (Set $set) {
-                                foreach (static::$resources as $resource => $label) {
-                                    $set("permissions.$resource", []);
-                                }
-                            }),
+                        Actions::make([
+                            Action::make('reset_all')
+                                ->label('Reset Semua Izin')
+                                ->icon('heroicon-m-x-circle')
+                                ->color('gray')
+                                ->link()
+                                ->action(function (Set $set) {
+                                    foreach (static::$resources as $resource => $label) {
+                                        $set("permissions.$resource", []);
+                                    }
+                                }),
+                        ]),
                     ]),
             ])->columns(2);
     }
@@ -227,7 +238,7 @@ class UserForm
         $permissionString = "{$prefix}_{$resource}";
 
         return Checkbox::make("checkbox_{$resource}_{$type}")
-            ->label('')
+            ->hiddenLabel()
             ->formatStateUsing(fn (Get $get) => in_array($permissionString, $get("permissions.$resource") ?? []))
             ->live()
             ->afterStateUpdated(function ($state, Set $set, Get $get) use ($resource, $permissionString) {
