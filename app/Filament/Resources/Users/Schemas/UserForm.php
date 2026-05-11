@@ -238,23 +238,24 @@ class UserForm
         }
     }
 
-    protected static function getPermissionToggle(string $resource, string $type): Checkbox
+    protected static function getPermissionToggle(string $resource, string $type): SchemaGroup
     {
         $prefix = $type === 'create' ? 'create' : ($type === 'update' ? 'update' : $type);
         $permissionString = "{$prefix}_{$resource}";
 
-        return Checkbox::make("checkbox_{$resource}_{$type}")
-            ->hiddenLabel()
-            ->extraAttributes(['class' => 'flex justify-center w-full'])
-            ->formatStateUsing(fn (Get $get) => in_array($permissionString, $get("permissions.$resource") ?? []))
-            ->live()
-            ->afterStateUpdated(function ($state, Set $set, Get $get) use ($resource, $permissionString) {
-                $current = $get("permissions.$resource") ?? [];
-                if ($state) {
-                    $set("permissions.$resource", array_unique(array_merge($current, [$permissionString])));
-                } else {
-                    $set("permissions.$resource", array_diff($current, [$permissionString]));
-                }
-            });
+        return SchemaGroup::make([
+            Checkbox::make("checkbox_{$resource}_{$type}")
+                ->hiddenLabel()
+                ->formatStateUsing(fn (Get $get) => in_array($permissionString, $get("permissions.$resource") ?? []))
+                ->live()
+                ->afterStateUpdated(function ($state, Set $set, Get $get) use ($resource, $permissionString) {
+                    $current = $get("permissions.$resource") ?? [];
+                    if ($state) {
+                        $set("permissions.$resource", array_unique(array_merge($current, [$permissionString])));
+                    } else {
+                        $set("permissions.$resource", array_diff($current, [$permissionString]));
+                    }
+                }),
+        ])->extraAttributes(['class' => 'flex justify-center w-full']);
     }
 }
