@@ -122,19 +122,102 @@ class UserForm
                                 ->description('Pilih menu dan aksi yang diizinkan untuk user ini')
                                 ->visible(fn (Get $get) => filled($get('type')) && $get('type') !== 'user')
                                 ->headerActions([
-                                    Action::make('select_all_view')
-                                        ->label('Pilih Semua View')
-                                        ->icon('heroicon-m-check-circle')
+                                    Action::make('toggle_all_view')
+                                        ->label('View All')
+                                        ->icon('heroicon-m-eye')
                                         ->color('success')
-                                        ->action(function (Set $set) {
+                                        ->action(function (Set $set, Get $get) {
+                                            $current = $get('permissions') ?? [];
+                                            $allChecked = true;
                                             foreach (static::$resources as $resource => $label) {
-                                                $set("permissions.$resource", ["view_$resource"]);
+                                                if (! in_array("view_$resource", $current[$resource] ?? [])) {
+                                                    $allChecked = false;
+                                                    break;
+                                                }
+                                            }
+
+                                            foreach (static::$resources as $resource => $label) {
+                                                $resPerms = $current[$resource] ?? [];
+                                                if ($allChecked) {
+                                                    $set("permissions.$resource", array_diff($resPerms, ["view_$resource"]));
+                                                } else {
+                                                    $set("permissions.$resource", array_unique(array_merge($resPerms, ["view_$resource"])));
+                                                }
+                                            }
+                                        }),
+                                    Action::make('toggle_all_add')
+                                        ->label('Add All')
+                                        ->icon('heroicon-m-plus-circle')
+                                        ->color('info')
+                                        ->action(function (Set $set, Get $get) {
+                                            $current = $get('permissions') ?? [];
+                                            $allChecked = true;
+                                            foreach (static::$resources as $resource => $label) {
+                                                if (! in_array("create_$resource", $current[$resource] ?? [])) {
+                                                    $allChecked = false;
+                                                    break;
+                                                }
+                                            }
+
+                                            foreach (static::$resources as $resource => $label) {
+                                                $resPerms = $current[$resource] ?? [];
+                                                if ($allChecked) {
+                                                    $set("permissions.$resource", array_diff($resPerms, ["create_$resource"]));
+                                                } else {
+                                                    $set("permissions.$resource", array_unique(array_merge($resPerms, ["create_$resource"])));
+                                                }
+                                            }
+                                        }),
+                                    Action::make('toggle_all_edit')
+                                        ->label('Edit All')
+                                        ->icon('heroicon-m-pencil-square')
+                                        ->color('warning')
+                                        ->action(function (Set $set, Get $get) {
+                                            $current = $get('permissions') ?? [];
+                                            $allChecked = true;
+                                            foreach (static::$resources as $resource => $label) {
+                                                if (! in_array("update_$resource", $current[$resource] ?? [])) {
+                                                    $allChecked = false;
+                                                    break;
+                                                }
+                                            }
+
+                                            foreach (static::$resources as $resource => $label) {
+                                                $resPerms = $current[$resource] ?? [];
+                                                if ($allChecked) {
+                                                    $set("permissions.$resource", array_diff($resPerms, ["update_$resource"]));
+                                                } else {
+                                                    $set("permissions.$resource", array_unique(array_merge($resPerms, ["update_$resource"])));
+                                                }
+                                            }
+                                        }),
+                                    Action::make('toggle_all_delete')
+                                        ->label('Del All')
+                                        ->icon('heroicon-m-trash')
+                                        ->color('danger')
+                                        ->action(function (Set $set, Get $get) {
+                                            $current = $get('permissions') ?? [];
+                                            $allChecked = true;
+                                            foreach (static::$resources as $resource => $label) {
+                                                if (! in_array("delete_$resource", $current[$resource] ?? [])) {
+                                                    $allChecked = false;
+                                                    break;
+                                                }
+                                            }
+
+                                            foreach (static::$resources as $resource => $label) {
+                                                $resPerms = $current[$resource] ?? [];
+                                                if ($allChecked) {
+                                                    $set("permissions.$resource", array_diff($resPerms, ["delete_$resource"]));
+                                                } else {
+                                                    $set("permissions.$resource", array_unique(array_merge($resPerms, ["delete_$resource"])));
+                                                }
                                             }
                                         }),
                                     Action::make('deselect_all')
-                                        ->label('Hapus Semua')
+                                        ->label('Reset')
                                         ->icon('heroicon-m-x-circle')
-                                        ->color('danger')
+                                        ->color('gray')
                                         ->action(function (Set $set) {
                                             foreach (static::$resources as $resource => $label) {
                                                 $set("permissions.$resource", []);
@@ -171,7 +254,6 @@ class UserForm
                 "update_$resource" => 'Edit',
                 "delete_$resource" => 'Delete',
             ])
-            ->bulkToggleable()
             ->columns(4)
             ->gridDirection('row');
     }
