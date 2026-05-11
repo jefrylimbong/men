@@ -3,9 +3,12 @@
 namespace App\Filament\Resources\Users\Schemas;
 
 use Filament\Actions\Action;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -124,139 +127,116 @@ class UserForm
                 Section::make('Hak Akses Menu')
                     ->description('Pilih menu dan aksi yang diizinkan untuk user ini')
                     ->visible(fn (Get $get) => filled($get('type')) && $get('type') !== 'user')
-                    ->headerActions([
-                        Action::make('toggle_all_view')
-                            ->label('View All')
-                            ->icon('heroicon-m-eye')
-                            ->color('success')
-                            ->action(function (Set $set, Get $get) {
-                                $current = $get('permissions') ?? [];
-                                $allChecked = true;
-                                foreach (static::$resources as $resource => $label) {
-                                    if (! in_array("view_$resource", $current[$resource] ?? [])) {
-                                        $allChecked = false;
-                                        break;
-                                    }
-                                }
+                    ->columnSpanFull()
+                    ->schema([
+                        // Header Row
+                        Grid::make(5)
+                            ->schema([
+                                Placeholder::make('menu_label')
+                                    ->label('Nama Menu')
+                                    ->content(''),
+                                Action::make('all_view')
+                                    ->label('View All')
+                                    ->icon('heroicon-m-eye')
+                                    ->color('success')
+                                    ->button()
+                                    ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'view')),
+                                Action::make('all_add')
+                                    ->label('Add All')
+                                    ->icon('heroicon-m-plus-circle')
+                                    ->color('info')
+                                    ->button()
+                                    ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'create')),
+                                Action::make('all_edit')
+                                    ->label('Edit All')
+                                    ->icon('heroicon-m-pencil-square')
+                                    ->color('warning')
+                                    ->button()
+                                    ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'update')),
+                                Action::make('all_delete')
+                                    ->label('Del All')
+                                    ->icon('heroicon-m-trash')
+                                    ->color('danger')
+                                    ->button()
+                                    ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'delete')),
+                            ]),
 
-                                foreach (static::$resources as $resource => $label) {
-                                    $resPerms = $current[$resource] ?? [];
-                                    if ($allChecked) {
-                                        $set("permissions.$resource", array_diff($resPerms, ["view_$resource"]));
-                                    } else {
-                                        $set("permissions.$resource", array_unique(array_merge($resPerms, ["view_$resource"])));
-                                    }
-                                }
-                            }),
-                        Action::make('toggle_all_add')
-                            ->label('Add All')
-                            ->icon('heroicon-m-plus-circle')
-                            ->color('info')
-                            ->action(function (Set $set, Get $get) {
-                                $current = $get('permissions') ?? [];
-                                $allChecked = true;
-                                foreach (static::$resources as $resource => $label) {
-                                    if (! in_array("create_$resource", $current[$resource] ?? [])) {
-                                        $allChecked = false;
-                                        break;
-                                    }
-                                }
+                        // Resource Rows
+                        SchemaGroup::make([
+                            ...collect(static::$resources)->map(function ($label, $resource) {
+                                return Grid::make(5)
+                                    ->visible(function (Get $get) use ($resource) {
+                                        if ($resource === 'AppErrors') {
+                                            return auth()->user()?->type === 'superadmin' && $get('type') === 'superadmin';
+                                        }
 
-                                foreach (static::$resources as $resource => $label) {
-                                    $resPerms = $current[$resource] ?? [];
-                                    if ($allChecked) {
-                                        $set("permissions.$resource", array_diff($resPerms, ["create_$resource"]));
-                                    } else {
-                                        $set("permissions.$resource", array_unique(array_merge($resPerms, ["create_$resource"])));
-                                    }
-                                }
-                            }),
-                        Action::make('toggle_all_edit')
-                            ->label('Edit All')
-                            ->icon('heroicon-m-pencil-square')
-                            ->color('warning')
-                            ->action(function (Set $set, Get $get) {
-                                $current = $get('permissions') ?? [];
-                                $allChecked = true;
-                                foreach (static::$resources as $resource => $label) {
-                                    if (! in_array("update_$resource", $current[$resource] ?? [])) {
-                                        $allChecked = false;
-                                        break;
-                                    }
-                                }
+                                        return true;
+                                    })
+                                    ->schema([
+                                        Placeholder::make("label_$resource")
+                                            ->label('')
+                                            ->content($label),
+                                        static::getPermissionToggle($resource, 'view'),
+                                        static::getPermissionToggle($resource, 'create'),
+                                        static::getPermissionToggle($resource, 'update'),
+                                        static::getPermissionToggle($resource, 'delete'),
+                                    ]);
+                            })->toArray(),
+                        ]),
 
-                                foreach (static::$resources as $resource => $label) {
-                                    $resPerms = $current[$resource] ?? [];
-                                    if ($allChecked) {
-                                        $set("permissions.$resource", array_diff($resPerms, ["update_$resource"]));
-                                    } else {
-                                        $set("permissions.$resource", array_unique(array_merge($resPerms, ["update_$resource"])));
-                                    }
-                                }
-                            }),
-                        Action::make('toggle_all_delete')
-                            ->label('Del All')
-                            ->icon('heroicon-m-trash')
-                            ->color('danger')
-                            ->action(function (Set $set, Get $get) {
-                                $current = $get('permissions') ?? [];
-                                $allChecked = true;
-                                foreach (static::$resources as $resource => $label) {
-                                    if (! in_array("delete_$resource", $current[$resource] ?? [])) {
-                                        $allChecked = false;
-                                        break;
-                                    }
-                                }
-
-                                foreach (static::$resources as $resource => $label) {
-                                    $resPerms = $current[$resource] ?? [];
-                                    if ($allChecked) {
-                                        $set("permissions.$resource", array_diff($resPerms, ["delete_$resource"]));
-                                    } else {
-                                        $set("permissions.$resource", array_unique(array_merge($resPerms, ["delete_$resource"])));
-                                    }
-                                }
-                            }),
-                        Action::make('deselect_all')
-                            ->label('Reset')
+                        Action::make('reset_all')
+                            ->label('Reset Semua Izin')
                             ->icon('heroicon-m-x-circle')
                             ->color('gray')
+                            ->link()
                             ->action(function (Set $set) {
                                 foreach (static::$resources as $resource => $label) {
                                     $set("permissions.$resource", []);
                                 }
                             }),
-                    ])
-                    ->schema(function (Get $get) {
-                        $checkboxes = [];
-                        foreach (static::$resources as $resource => $label) {
-                            $checkboxes[] = static::getPermissionCheckbox($resource, $label, $get);
-                        }
-
-                        return $checkboxes;
-                    })
-                    ->columnSpanFull(),
+                    ]),
             ])->columns(2);
     }
 
-    protected static function getPermissionCheckbox(string $resource, string $label, Get $get): CheckboxList
+    protected static function toggleGlobal(Set $set, Get $get, string $type): void
     {
-        return CheckboxList::make("permissions.$resource")
-            ->label($label)
-            ->visible(function () use ($resource, $get) {
-                if ($resource === 'AppErrors') {
-                    return auth()->user()?->type === 'superadmin' && $get('type') === 'superadmin';
-                }
+        $current = $get('permissions') ?? [];
+        $allChecked = true;
+        foreach (static::$resources as $resource => $label) {
+            $prefix = $type === 'create' ? 'create' : ($type === 'update' ? 'update' : $type);
+            if (! in_array("{$prefix}_{$resource}", $current[$resource] ?? [])) {
+                $allChecked = false;
+                break;
+            }
+        }
 
-                return true;
-            })
-            ->options([
-                "view_$resource" => 'View',
-                "create_$resource" => 'Add',
-                "update_$resource" => 'Edit',
-                "delete_$resource" => 'Delete',
-            ])
-            ->columns(4)
-            ->gridDirection('row');
+        foreach (static::$resources as $resource => $label) {
+            $prefix = $type === 'create' ? 'create' : ($type === 'update' ? 'update' : $type);
+            $resPerms = $current[$resource] ?? [];
+            if ($allChecked) {
+                $set("permissions.$resource", array_diff($resPerms, ["{$prefix}_{$resource}"]));
+            } else {
+                $set("permissions.$resource", array_unique(array_merge($resPerms, ["{$prefix}_{$resource}"])));
+            }
+        }
+    }
+
+    protected static function getPermissionToggle(string $resource, string $type): Checkbox
+    {
+        $prefix = $type === 'create' ? 'create' : ($type === 'update' ? 'update' : $type);
+        $permissionString = "{$prefix}_{$resource}";
+
+        return Checkbox::make("checkbox_{$resource}_{$type}")
+            ->label('')
+            ->formatStateUsing(fn (Get $get) => in_array($permissionString, $get("permissions.$resource") ?? []))
+            ->live()
+            ->afterStateUpdated(function ($state, Set $set, Get $get) use ($resource, $permissionString) {
+                $current = $get("permissions.$resource") ?? [];
+                if ($state) {
+                    $set("permissions.$resource", array_unique(array_merge($current, [$permissionString])));
+                } else {
+                    $set("permissions.$resource", array_diff($current, [$permissionString]));
+                }
+            });
     }
 }
