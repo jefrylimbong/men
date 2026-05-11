@@ -20,7 +20,6 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
-use Filament\Support\Enums\Alignment;
 
 class UserForm
 {
@@ -144,7 +143,7 @@ class UserForm
                                         ->color('success')
                                         ->button()
                                         ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'view')),
-                                ])->alignment(Alignment::Center),
+                                ]),
                                 Actions::make([
                                     Action::make('all_add')
                                         ->label('Add All')
@@ -152,7 +151,7 @@ class UserForm
                                         ->color('info')
                                         ->button()
                                         ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'create')),
-                                ])->alignment(Alignment::Center),
+                                ]),
                                 Actions::make([
                                     Action::make('all_edit')
                                         ->label('Edit All')
@@ -160,7 +159,7 @@ class UserForm
                                         ->color('warning')
                                         ->button()
                                         ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'update')),
-                                ])->alignment(Alignment::Center),
+                                ]),
                                 Actions::make([
                                     Action::make('all_delete')
                                         ->label('Del All')
@@ -168,7 +167,7 @@ class UserForm
                                         ->color('danger')
                                         ->button()
                                         ->action(fn (Set $set, Get $get) => static::toggleGlobal($set, $get, 'delete')),
-                                ])->alignment(Alignment::Center),
+                                ]),
                             ]),
 
                         // Resource Rows
@@ -238,25 +237,22 @@ class UserForm
         }
     }
 
-    protected static function getPermissionToggle(string $resource, string $type): SchemaGroup
+    protected static function getPermissionToggle(string $resource, string $type): Checkbox
     {
         $prefix = $type === 'create' ? 'create' : ($type === 'update' ? 'update' : $type);
         $permissionString = "{$prefix}_{$resource}";
 
-        return SchemaGroup::make([
-            Checkbox::make("checkbox_{$resource}_{$type}")
-                ->hiddenLabel()
-                ->extraAttributes(['class' => '!flex !justify-center !w-full'])
-                ->formatStateUsing(fn (Get $get) => in_array($permissionString, $get("permissions.$resource") ?? []))
-                ->live()
-                ->afterStateUpdated(function ($state, Set $set, Get $get) use ($resource, $permissionString) {
-                    $current = $get("permissions.$resource") ?? [];
-                    if ($state) {
-                        $set("permissions.$resource", array_unique(array_merge($current, [$permissionString])));
-                    } else {
-                        $set("permissions.$resource", array_diff($current, [$permissionString]));
-                    }
-                }),
-        ])->extraAttributes(['class' => '!flex !justify-center !w-full']);
+        return Checkbox::make("checkbox_{$resource}_{$type}")
+            ->hiddenLabel()
+            ->formatStateUsing(fn (Get $get) => in_array($permissionString, $get("permissions.$resource") ?? []))
+            ->live()
+            ->afterStateUpdated(function ($state, Set $set, Get $get) use ($resource, $permissionString) {
+                $current = $get("permissions.$resource") ?? [];
+                if ($state) {
+                    $set("permissions.$resource", array_unique(array_merge($current, [$permissionString])));
+                } else {
+                    $set("permissions.$resource", array_diff($current, [$permissionString]));
+                }
+            });
     }
 }
