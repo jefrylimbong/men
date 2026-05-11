@@ -94,7 +94,7 @@ class WithdrawalObserver
                         'amount' => $withdrawalData->handling_fee,
                         'debit_type' => 'PT', // PT menerima fee
                         'debit_id' => 0,
-                        'credit_type' => 'Internal', // Dari sumber internal operasional
+                        'credit_type' => 'PT', // Dari sumber internal operasional (Gunakan PT agar konsisten)
                         'credit_id' => 0,
                         'description' => 'Biaya penanganan unit '.($withdrawalData->customerData->nopol ?? '-'),
                         'status' => 'completed',

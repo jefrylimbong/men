@@ -24,8 +24,8 @@ class FinanceTransactionsTable
                 TextColumn::make('debit_type')
                     ->label('Penerima (Debit)')
                     ->formatStateUsing(function ($record) {
-                        if ($record->debit_type === 'PT') {
-                            return 'PT (Internal)';
+                        if (in_array($record->debit_type, ['PT', 'Internal'])) {
+                            return $record->debit_type === 'PT' ? 'PT (Internal)' : 'Internal';
                         }
                         $entity = $record->debitEntity;
 
@@ -34,8 +34,8 @@ class FinanceTransactionsTable
                 TextColumn::make('credit_type')
                     ->label('Pengirim (Credit)')
                     ->formatStateUsing(function ($record) {
-                        if ($record->credit_type === 'PT') {
-                            return 'PT (Internal)';
+                        if (in_array($record->credit_type, ['PT', 'Internal'])) {
+                            return $record->credit_type === 'PT' ? 'PT (Internal)' : 'Internal';
                         }
                         $entity = $record->creditEntity;
 
