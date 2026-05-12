@@ -6,6 +6,7 @@ use App\Models\BastkRegister;
 use App\Models\CustomerData;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -80,18 +81,20 @@ class WithdrawalDataForm
                             ])
                             ->default('pending')
                             ->required(),
-                        Toggle::make('is_vendor_paid')
-                            ->label('Dana Vendor Cair?')
-                            ->reactive()
-                            ->default(false),
-                        Select::make('vendor_id')
-                            ->label('Vendor Pendana')
-                            ->relationship('vendor', 'nama')
-                            ->searchable()
-                            ->preload()
-                            ->visible(fn ($get) => $get('is_vendor_paid'))
-                            ->required(fn ($get) => $get('is_vendor_paid'))
-                            ->columnSpanFull(),
+                        Group::make([
+                            Toggle::make('is_vendor_paid')
+                                ->label('Dana Vendor Cair?')
+                                ->reactive()
+                                ->default(false),
+                            Select::make('vendor_id')
+                                ->placeholder('Pilih Vendor Pendana')
+                                ->hiddenLabel()
+                                ->relationship('vendor', 'nama')
+                                ->searchable()
+                                ->preload()
+                                ->visible(fn ($get) => $get('is_vendor_paid'))
+                                ->required(fn ($get) => $get('is_vendor_paid')),
+                        ]),
                     ])->columns(2),
 
                 Section::make('BASTK (Berita Acara)')
