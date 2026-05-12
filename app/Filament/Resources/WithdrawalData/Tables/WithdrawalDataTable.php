@@ -36,7 +36,7 @@ class WithdrawalDataTable
                     ->label('Lapangan & Status')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'pending' => 'Unit Terpantau',
+                        'pending' => 'Proses',
                         'validated' => 'Terverifikasi',
                         'paid' => 'Lunas',
                         'canceled' => 'Batal',
@@ -77,7 +77,7 @@ class WithdrawalDataTable
                     ->label('Filter Vendor'),
                 SelectFilter::make('status')
                     ->options([
-                        'pending' => 'Unit Terpantau',
+                        'pending' => 'Proses',
                         'validated' => 'Terverifikasi',
                         'paid' => 'Lunas',
                         'canceled' => 'Dibatalkan',

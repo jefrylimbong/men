@@ -70,11 +70,11 @@ class WithdrawalDataForm
                             ->searchable()
                             ->preload()
                             ->required(),
-                        Placeholder::make('spacer')->label('')->content('')->columnSpan(1), // Keeping spacer for row 1 consistency if needed, or just let row 1 have 2 cols
+
                         Select::make('status')
                             ->label('Status')
                             ->options([
-                                'pending' => 'Unit Terpantau',
+                                'pending' => 'Proses',
                                 'validated' => 'Terverifikasi',
                                 'paid' => 'Lunas',
                                 'canceled' => 'Dibatalkan',
@@ -90,7 +90,7 @@ class WithdrawalDataForm
                             ->visible(fn ($get) => $get('is_vendor_paid'))
                             ->required(fn ($get) => $get('is_vendor_paid')),
                         Toggle::make('is_vendor_paid')
-                            ->label('Dana Vendor Cair?')
+                            ->label(fn ($get) => $get('is_vendor_paid') ? '' : new HtmlString('<span class="whitespace-nowrap">Dana Vendor Cair?</span>'))
                             ->reactive()
                             ->default(false)
                             ->extraAttributes(['class' => 'mt-8']), // Align with inputs
