@@ -252,8 +252,10 @@ class WithdrawalDataForm
 
                         Toggle::make('is_finance_paid')
                             ->label('Dana Finance Cair?')
-                            ->reactive()
-                            ->columnSpanFull(),
+                            ->reactive(),
+                        Toggle::make('is_vendor_paid')
+                            ->label('Dana Vendor Cair?')
+                            ->reactive(),
                         TextInput::make('finance_payout')
                             ->label('Nominal Cair Finance (Aktual)')
                             ->prefix('Rp')

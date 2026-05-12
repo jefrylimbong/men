@@ -52,7 +52,7 @@ class WithdrawalObserver
                         'credit_id' => 0,
                         'debit_id' => $withdrawalData->vendor_id,
                         'description' => 'Hutang penarikan unit '.($withdrawalData->customerData->nopol ?? '-').' (Talangan + Fee)',
-                        'status' => 'pending',
+                        'status' => $withdrawalData->is_vendor_paid ? 'completed' : 'pending',
                     ]
                 );
             }
@@ -104,10 +104,17 @@ class WithdrawalObserver
         }
 
         // Jika Pembayaran dari Finance sudah Lunas
-        if ($withdrawalData->isDirty('is_finance_paid') && $withdrawalData->is_finance_paid) {
+        if ($withdrawalData->isDirty('is_finance_paid')) {
             FinanceTransaction::where('reference_id', $withdrawalData->id)
                 ->where('category', 'billing')
-                ->update(['status' => 'completed']);
+                ->update(['status' => $withdrawalData->is_finance_paid ? 'completed' : 'pending']);
+        }
+
+        // Jika Pembayaran ke Vendor sudah Lunas
+        if ($withdrawalData->isDirty('is_vendor_paid')) {
+            FinanceTransaction::where('reference_id', $withdrawalData->id)
+                ->where('category', 'penarikan')
+                ->update(['status' => $withdrawalData->is_vendor_paid ? 'completed' : 'pending']);
         }
     }
 

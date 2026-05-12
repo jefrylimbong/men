@@ -20,10 +20,12 @@ class WithdrawalData extends Model
         'vendor_fee',
         'estimated_payout',
         'is_finance_paid',
+        'is_vendor_paid',
     ];
 
     protected $casts = [
         'is_finance_paid' => 'boolean',
+        'is_vendor_paid' => 'boolean',
         'finance_deadline' => 'date',
         'withdrawal_date' => 'datetime',
     ];

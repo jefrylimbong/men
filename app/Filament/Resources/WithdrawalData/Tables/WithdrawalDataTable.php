@@ -63,6 +63,12 @@ class WithdrawalDataTable
                     ->formatStateUsing(fn (bool $state) => $state ? 'Cair' : 'Pending')
                     ->color(fn (bool $state) => $state ? 'success' : 'warning')
                     ->icon(fn (bool $state) => $state ? 'heroicon-m-check-circle' : 'heroicon-m-ellipsis-horizontal-circle'),
+                TextColumn::make('is_vendor_paid')
+                    ->label('Cair Vendor')
+                    ->badge()
+                    ->formatStateUsing(fn (bool $state) => $state ? 'Cair' : 'Pending')
+                    ->color(fn (bool $state) => $state ? 'success' : 'warning')
+                    ->icon(fn (bool $state) => $state ? 'heroicon-m-check-circle' : 'heroicon-m-ellipsis-horizontal-circle'),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
