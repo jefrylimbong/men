@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Tables;
 
 use App\Models\AndroidActionHistory;
 use App\Models\WithdrawalData;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -14,6 +15,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
 
 class UsersTable
 {
@@ -22,27 +24,33 @@ class UsersTable
         return $table
             ->defaultSort('name')
             ->columns([
-                TextColumn::make('index')
-                    ->label('No')
-                    ->rowIndex(),
                 ImageColumn::make('avatar')
-                    ->circular(),
+                    ->circular()
+                    ->label('Foto'),
                 TextColumn::make('name')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('username')
-                    ->searchable()
+                    ->label('Nama User')
+                    ->description(fn ($record) => "@{$record->username}")
+                    ->searchable(['name', 'username'])
                     ->sortable(),
                 TextColumn::make('email')
+                    ->label('Email')
                     ->searchable()
+                    ->copyable()
                     ->sortable(),
                 TextColumn::make('type')
+                    ->label('Role')
                     ->badge()
-                    ->separator(','),
+                    ->color(fn (string $state): string => match ($state) {
+                        'superadmin' => 'danger',
+                        'admin' => 'primary',
+                        'user' => 'success',
+                        default => 'gray',
+                    }),
                 ToggleColumn::make('is_active')
                     ->label('Aktif'),
                 TextColumn::make('created_at')
-                    ->dateTime()
+                    ->label('Dibuat')
+                    ->dateTime('d M Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -51,7 +59,7 @@ class UsersTable
             ])
             ->actions([
                 EditAction::make(),
-                \Filament\Actions\Action::make('resetPassword')
+                Action::make('resetPassword')
                     ->label('Reset Pass')
                     ->color('warning')
                     ->icon('heroicon-m-key')
@@ -60,7 +68,7 @@ class UsersTable
                     ->modalDescription('Apakah Anda yakin ingin mereset password user ini menjadi 123456?')
                     ->action(function ($record) {
                         $record->update([
-                            'password' => \Illuminate\Support\Facades\Hash::make('123456'),
+                            'password' => Hash::make('123456'),
                         ]);
 
                         Notification::make()

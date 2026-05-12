@@ -27,38 +27,35 @@ class CustomerDataTable
             ->recordAction(ViewAction::class)
             ->recordUrl(null)
             ->columns([
-                TextColumn::make('index')
-                    ->label('No')
-                    ->rowIndex(),
                 TextColumn::make('nama')
                     ->label('Customer')
-                    ->description(fn ($record) => "Nopol: {$record->nopol}")
+                    ->description(fn ($record) => $record->nopol)
                     ->searchable(['nama', 'nopol'])
-                    ->sortable()
                     ->copyable()
-                    ->copyableState(fn ($record) => $record->nopol),
-                TextColumn::make('tipe')
-                    ->label('Tipe Kendaraan')
-                    ->description(fn ($record) => "Mesin: {$record->nosin}")
-                    ->searchable()
+                    ->copyMessage('No. Polisi disalin')
+                    ->copyableState(fn ($record) => $record->nopol)
                     ->sortable(),
-                TextColumn::make('norak')
-                    ->label('No. Rangka')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('tipe')
+                    ->label('Kendaraan')
+                    ->description(fn ($record) => "Rk: {$record->norak} | Ms: {$record->nosin}")
+                    ->searchable(['tipe', 'norak', 'nosin'])
+                    ->sortable(),
                 TextColumn::make('financeBranch.financeMaster.fin_name')
-                    ->label('Finance & Cabang')
+                    ->label('Finance & Lokasi')
                     ->description(fn ($record) => $record->financeBranch?->locationMaster?->name)
                     ->searchable()
                     ->sortable(),
                 IconColumn::make('is_active')
                     ->label('Status')
                     ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
                     ->trueColor('success')
                     ->falseColor('danger')
                     ->sortable(),
                 TextColumn::make('created_at')
-                    ->dateTime()
+                    ->label('Terdaftar')
+                    ->dateTime('d M Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

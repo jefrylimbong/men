@@ -59,23 +59,23 @@ class FinanceMastersTable
             ->modifyQueryUsing(fn ($query) => $query->withCount('branches')->with('branches.locationMaster'))
             ->defaultSort('fin_name')
             ->columns([
-                TextColumn::make('index')
-                    ->label('No')
-                    ->rowIndex()
-                    ->action($viewBranchesAction),
-                TextColumn::make('code_fin')
-                    ->label('Kode Finance')
-                    ->description(fn ($record) => "{$record->branches_count} Cabang")
-                    ->action($viewBranchesAction)
-                    ->searchable()
-                    ->sortable(),
                 TextColumn::make('fin_name')
-                    ->label('Nama Finance')
+                    ->label('Finance')
+                    ->description(fn ($record) => "Code: {$record->code_fin}")
+                    ->copyable()
+                    ->copyableState(fn ($record) => $record->code_fin)
                     ->action($viewBranchesAction)
-                    ->searchable()
+                    ->searchable(['fin_name', 'code_fin'])
+                    ->sortable(),
+                TextColumn::make('branches_count')
+                    ->label('Total Cabang')
+                    ->badge()
+                    ->color('info')
+                    ->action($viewBranchesAction)
                     ->sortable(),
                 ImageColumn::make('photo')
-                    ->label('Foto')
+                    ->label('Logo/Foto')
+                    ->circular()
                     ->defaultImageUrl(null),
             ])
             ->actions([

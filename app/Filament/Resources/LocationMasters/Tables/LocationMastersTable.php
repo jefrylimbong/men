@@ -16,15 +16,13 @@ class LocationMastersTable
         return $table
             ->defaultSort('name')
             ->columns([
-                TextColumn::make('index')
-                    ->label('No')
-                    ->rowIndex(),
-                TextColumn::make('code_loc')
-                    ->label('Kode Lokasi')
-                    ->searchable(),
                 TextColumn::make('name')
-                    ->label('Location')
-                    ->searchable(),
+                    ->label('Lokasi')
+                    ->description(fn ($record) => "Code: {$record->code_loc}")
+                    ->copyable()
+                    ->copyableState(fn ($record) => $record->code_loc)
+                    ->searchable(['name', 'code_loc'])
+                    ->sortable(),
             ])
             ->actions([
                 EditAction::make(),
