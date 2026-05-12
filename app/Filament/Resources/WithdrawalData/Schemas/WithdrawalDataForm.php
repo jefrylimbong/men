@@ -70,7 +70,7 @@ class WithdrawalDataForm
                             ->searchable()
                             ->preload()
                             ->required(),
-                        Placeholder::make('spacer')->label('')->content(''), // Placeholder for alignment
+                        Placeholder::make('spacer')->label('')->content('')->columnSpan(1), // Keeping spacer for row 1 consistency if needed, or just let row 1 have 2 cols
                         Select::make('status')
                             ->label('Status')
                             ->options([
@@ -81,10 +81,6 @@ class WithdrawalDataForm
                             ])
                             ->default('pending')
                             ->required(),
-                        Toggle::make('is_vendor_paid')
-                            ->label('Dana Vendor Cair?')
-                            ->reactive()
-                            ->default(false),
                         Select::make('vendor_id')
                             ->label('Vendor Pendana')
                             ->placeholder('Pilih Vendor')
@@ -93,6 +89,11 @@ class WithdrawalDataForm
                             ->preload()
                             ->visible(fn ($get) => $get('is_vendor_paid'))
                             ->required(fn ($get) => $get('is_vendor_paid')),
+                        Toggle::make('is_vendor_paid')
+                            ->label('Dana Vendor Cair?')
+                            ->reactive()
+                            ->default(false)
+                            ->extraAttributes(['class' => 'mt-8']), // Align with inputs
                     ])->columns(3),
 
                 Section::make('BASTK (Berita Acara)')
