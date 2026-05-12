@@ -70,11 +70,17 @@ class WithdrawalDataForm
                             ->searchable()
                             ->preload()
                             ->required(),
+                        Toggle::make('is_vendor_paid')
+                            ->label('Dana Vendor Cair?')
+                            ->reactive()
+                            ->default(false),
                         Select::make('vendor_id')
                             ->label('Vendor Pendana')
                             ->relationship('vendor', 'nama')
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->visible(fn ($get) => $get('is_vendor_paid'))
+                            ->required(fn ($get) => $get('is_vendor_paid')),
                         Select::make('status')
                             ->label('Status')
                             ->options([
@@ -252,10 +258,8 @@ class WithdrawalDataForm
 
                         Toggle::make('is_finance_paid')
                             ->label('Dana Finance Cair?')
-                            ->reactive(),
-                        Toggle::make('is_vendor_paid')
-                            ->label('Dana Vendor Cair?')
-                            ->reactive(),
+                            ->reactive()
+                            ->columnSpanFull(),
                         TextInput::make('finance_payout')
                             ->label('Nominal Cair Finance (Aktual)')
                             ->prefix('Rp')
