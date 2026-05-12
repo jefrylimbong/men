@@ -78,8 +78,8 @@ class WithdrawalDataForm
                         Select::make('status')
                             ->label('Status')
                             ->options([
-                                'pending' => 'Pending',
-                                'validated' => 'Tervalidasi',
+                                'pending' => 'Unit Terpantau',
+                                'validated' => 'Terverifikasi',
                                 'paid' => 'Lunas',
                                 'canceled' => 'Dibatalkan',
                             ])
