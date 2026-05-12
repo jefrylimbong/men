@@ -23,36 +23,20 @@ class WithdrawalDataTable
                     ->sortable(),
                 TextColumn::make('customerData.nama')
                     ->label('Customer')
-                    ->searchable()
+                    ->description(fn ($record) => $record->customerData?->nopol)
+                    ->searchable(['nama', 'nopol'])
                     ->sortable(),
-                TextColumn::make('customerData.nopol')
-                    ->label('No Plat')
-                    ->searchable(),
                 TextColumn::make('customerData.financeBranch.financeMaster.fin_name')
                     ->label('Finance')
                     ->sortable(),
-                TextColumn::make('vendor.nama')
-                    ->label('Vendor')
-                    ->sortable(),
                 TextColumn::make('user.name')
                     ->label('Lapangan')
-                    ->sortable(),
-                TextColumn::make('bastk.number')
-                    ->label('No BASTK')
-                    ->placeholder('Belum ada'),
-                TextColumn::make('bailout_amount')
-                    ->label('Talangan')
-                    ->money('IDR')
                     ->sortable(),
                 TextColumn::make('is_finance_paid')
                     ->label('Cair Finance')
                     ->badge()
                     ->formatStateUsing(fn (bool $state) => $state ? 'Cair' : 'Pending')
                     ->color(fn (bool $state) => $state ? 'success' : 'warning'),
-                TextColumn::make('finance_deadline')
-                    ->label('Deadline')
-                    ->date()
-                    ->sortable(),
                 TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
