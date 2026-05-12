@@ -11,7 +11,6 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\HtmlString;
@@ -71,6 +70,7 @@ class WithdrawalDataForm
                             ->searchable()
                             ->preload()
                             ->required(),
+                        Placeholder::make('spacer')->label('')->content(''), // Placeholder for alignment
                         Select::make('status')
                             ->label('Status')
                             ->options([
@@ -81,21 +81,19 @@ class WithdrawalDataForm
                             ])
                             ->default('pending')
                             ->required(),
-                        Group::make([
-                            Toggle::make('is_vendor_paid')
-                                ->label('Dana Vendor Cair?')
-                                ->reactive()
-                                ->default(false),
-                            Select::make('vendor_id')
-                                ->placeholder('Pilih Vendor Pendana')
-                                ->hiddenLabel()
-                                ->relationship('vendor', 'nama')
-                                ->searchable()
-                                ->preload()
-                                ->visible(fn ($get) => $get('is_vendor_paid'))
-                                ->required(fn ($get) => $get('is_vendor_paid')),
-                        ]),
-                    ])->columns(2),
+                        Toggle::make('is_vendor_paid')
+                            ->label('Dana Vendor Cair?')
+                            ->reactive()
+                            ->default(false),
+                        Select::make('vendor_id')
+                            ->label('Vendor Pendana')
+                            ->placeholder('Pilih Vendor')
+                            ->relationship('vendor', 'nama')
+                            ->searchable()
+                            ->preload()
+                            ->visible(fn ($get) => $get('is_vendor_paid'))
+                            ->required(fn ($get) => $get('is_vendor_paid')),
+                    ])->columns(3),
 
                 Section::make('BASTK (Berita Acara)')
                     ->schema([
