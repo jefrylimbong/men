@@ -30,44 +30,32 @@ class CustomerDataTable
                 TextColumn::make('index')
                     ->label('No')
                     ->rowIndex(),
-                TextColumn::make('nopol')
-                    ->label('No. Polisi')
+                TextColumn::make('nama')
+                    ->label('Customer')
+                    ->description(fn ($record) => "Nopol: {$record->nopol}")
+                    ->searchable(['nama', 'nopol'])
+                    ->sortable()
+                    ->copyable()
+                    ->copyableState(fn ($record) => $record->nopol),
+                TextColumn::make('tipe')
+                    ->label('Tipe Kendaraan')
+                    ->description(fn ($record) => "Mesin: {$record->nosin}")
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('norak')
                     ->label('No. Rangka')
                     ->searchable()
-                    ->sortable(),
-                TextColumn::make('nosin')
-                    ->label('No. Mesin')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('tipe')
-                    ->label('Tipe')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('nama')
-                    ->label('Nama')
-                    ->searchable()
-                    ->sortable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('financeBranch.financeMaster.fin_name')
-                    ->label('Finance')
+                    ->label('Finance & Cabang')
+                    ->description(fn ($record) => $record->financeBranch?->locationMaster?->name)
                     ->searchable()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('financeBranch.locationMaster.name')
-                    ->label('Lokasi')
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('tenor')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('ke')
-                    ->label('Ke')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->sortable(),
                 IconColumn::make('is_active')
-                    ->label('Aktif')
+                    ->label('Status')
                     ->boolean()
+                    ->trueColor('success')
+                    ->falseColor('danger')
                     ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()

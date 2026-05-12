@@ -33,7 +33,7 @@ class WithdrawalDataTable
                     ->label('Finance')
                     ->sortable(),
                 TextColumn::make('status')
-                    ->label('Lapangan & Status')
+                    ->label('Status')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'pending' => 'Pending',
@@ -55,8 +55,7 @@ class WithdrawalDataTable
                         'paid' => 'heroicon-m-currency-dollar',
                         'canceled' => 'heroicon-m-x-circle',
                         default => 'heroicon-m-question-mark-circle',
-                    })
-                    ->description(fn ($record) => "👤 {$record->user?->name}"),
+                    }),
                 TextColumn::make('is_finance_paid')
                     ->label('Cair Finance')
                     ->badge()
