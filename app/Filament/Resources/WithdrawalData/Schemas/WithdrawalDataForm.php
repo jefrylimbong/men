@@ -70,17 +70,6 @@ class WithdrawalDataForm
                             ->searchable()
                             ->preload()
                             ->required(),
-                        Toggle::make('is_vendor_paid')
-                            ->label('Dana Vendor Cair?')
-                            ->reactive()
-                            ->default(false),
-                        Select::make('vendor_id')
-                            ->label('Vendor Pendana')
-                            ->relationship('vendor', 'nama')
-                            ->searchable()
-                            ->preload()
-                            ->visible(fn ($get) => $get('is_vendor_paid'))
-                            ->required(fn ($get) => $get('is_vendor_paid')),
                         Select::make('status')
                             ->label('Status')
                             ->options([
@@ -91,6 +80,18 @@ class WithdrawalDataForm
                             ])
                             ->default('pending')
                             ->required(),
+                        Toggle::make('is_vendor_paid')
+                            ->label('Dana Vendor Cair?')
+                            ->reactive()
+                            ->default(false),
+                        Select::make('vendor_id')
+                            ->label('Vendor Pendana')
+                            ->relationship('vendor', 'nama')
+                            ->searchable()
+                            ->preload()
+                            ->visible(fn ($get) => $get('is_vendor_paid'))
+                            ->required(fn ($get) => $get('is_vendor_paid'))
+                            ->columnSpanFull(),
                     ])->columns(2),
 
                 Section::make('BASTK (Berita Acara)')
