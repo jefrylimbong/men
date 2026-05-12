@@ -24,6 +24,9 @@ class WithdrawalDataTable
                 TextColumn::make('customerData.nama')
                     ->label('Customer')
                     ->description(fn ($record) => $record->customerData?->nopol)
+                    ->copyable()
+                    ->copyMessage('Nomor Plat berhasil disalin')
+                    ->copyableState(fn ($record) => $record->customerData?->nopol)
                     ->searchable(['nama', 'nopol'])
                     ->sortable(),
                 TextColumn::make('customerData.financeBranch.financeMaster.fin_name')
@@ -32,6 +35,13 @@ class WithdrawalDataTable
                 TextColumn::make('status')
                     ->label('Lapangan & Status')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'pending' => 'Pending',
+                        'validated' => 'Terverifikasi',
+                        'paid' => 'Lunas',
+                        'canceled' => 'Batal',
+                        default => $state,
+                    })
                     ->color(fn (string $state): string => match ($state) {
                         'pending' => 'gray',
                         'validated' => 'warning',
@@ -39,12 +49,20 @@ class WithdrawalDataTable
                         'canceled' => 'danger',
                         default => 'gray',
                     })
-                    ->description(fn ($record) => "User: {$record->user?->name}"),
+                    ->icon(fn (string $state): string => match ($state) {
+                        'pending' => 'heroicon-m-clock',
+                        'validated' => 'heroicon-m-check-badge',
+                        'paid' => 'heroicon-m-currency-dollar',
+                        'canceled' => 'heroicon-m-x-circle',
+                        default => 'heroicon-m-question-mark-circle',
+                    })
+                    ->description(fn ($record) => "👤 {$record->user?->name}"),
                 TextColumn::make('is_finance_paid')
                     ->label('Cair Finance')
                     ->badge()
                     ->formatStateUsing(fn (bool $state) => $state ? 'Cair' : 'Pending')
-                    ->color(fn (bool $state) => $state ? 'success' : 'warning'),
+                    ->color(fn (bool $state) => $state ? 'success' : 'warning')
+                    ->icon(fn (bool $state) => $state ? 'heroicon-m-check-circle' : 'heroicon-m-ellipsis-horizontal-circle'),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
