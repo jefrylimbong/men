@@ -29,15 +29,8 @@ class WithdrawalDataTable
                 TextColumn::make('customerData.financeBranch.financeMaster.fin_name')
                     ->label('Finance')
                     ->sortable(),
-                TextColumn::make('user.name')
-                    ->label('Lapangan')
-                    ->sortable(),
-                TextColumn::make('is_finance_paid')
-                    ->label('Cair Finance')
-                    ->badge()
-                    ->formatStateUsing(fn (bool $state) => $state ? 'Cair' : 'Pending')
-                    ->color(fn (bool $state) => $state ? 'success' : 'warning'),
                 TextColumn::make('status')
+                    ->label('Lapangan & Status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'pending' => 'gray',
@@ -45,7 +38,13 @@ class WithdrawalDataTable
                         'paid' => 'success',
                         'canceled' => 'danger',
                         default => 'gray',
-                    }),
+                    })
+                    ->description(fn ($record) => "User: {$record->user?->name}"),
+                TextColumn::make('is_finance_paid')
+                    ->label('Cair Finance')
+                    ->badge()
+                    ->formatStateUsing(fn (bool $state) => $state ? 'Cair' : 'Pending')
+                    ->color(fn (bool $state) => $state ? 'success' : 'warning'),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
