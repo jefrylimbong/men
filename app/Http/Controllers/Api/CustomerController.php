@@ -14,64 +14,32 @@ class CustomerController extends Controller
     {
         $user = $request->user();
         $isSync = $request->has('is_sync') && $request->is_sync == 'true';
-
-        // Optimasi: Hanya ambil kolom yang dibutuhkan
-        $baseQuery = CustomerData::select('id', 'nopol', 'nama', 'norak', 'nosin', 'tipe', 'finance_branch_id', 'is_active')
-            ->with(['financeBranch' => function ($query) {
-                $query->select('id', 'location_master_id')
-                    ->with('locationMaster:id,name');
-            }])
-            ->where('is_active', true);
-
         $assignedFinanceIds = $user ? $user->financeMasters()->pluck('finance_masters.id') : collect();
 
         if (! $isSync) {
             $search = $request->input('search', '');
+            $customers = [];
 
-            try {
-                $onlineQuery = CustomerData::query()
-                    ->leftJoin('finance_branches', 'customer_data.finance_branch_id', '=', 'finance_branches.id')
-                    ->leftJoin('location_masters', 'finance_branches.location_master_id', '=', 'location_masters.id')
-                    ->select(
-                        'customer_data.id',
-                        'customer_data.nopol',
-                        'customer_data.nama',
-                        'customer_data.tipe',
-                        'location_masters.name as location_name'
-                    )
-                    ->where('customer_data.is_active', true);
-
-                if (! empty($search)) {
-                    try {
-                        // Gunakan Scout untuk pencarian instan (Meilisearch)
-                        $scoutResults = CustomerData::search($search)
-                            ->where('is_active', true)
-                            ->take(15)
-                            ->get();
-
-                        // Coba Meilisearch (Scout)
-                        $customers = CustomerData::search($search)
-                            ->where('is_active', 1)
-                            ->take(20)
-                            ->get();
-                    } catch (\Exception $e) {
-                        // Jika Meili gagal, gunakan SQL Biasa yang Ringan
-                        $customers = CustomerData::where('nopol', 'like', "%$search%")
-                            ->where('is_active', 1)
-                            ->limit(20)
-                            ->get();
-                    }
-                } else {
-                    $customers = [];
+            if (! empty($search)) {
+                try {
+                    // 1. Coba Meilisearch (Scout) - Sangat Cepat
+                    $customers = CustomerData::search($search)
+                        ->where('is_active', 1)
+                        ->take(20)
+                        ->get();
+                } catch (\Exception $e) {
+                    // 2. Fallback: SQL Biasa jika Meilisearch gagal
+                    $customers = CustomerData::where('nopol', 'like', "%$search%")
+                        ->where('is_active', 1)
+                        ->limit(20)
+                        ->get();
                 }
-
+            }
         } else {
             // Sinkronisasi: Cek hak akses
             if (($user && $user->type === 'superadmin') || $assignedFinanceIds->isEmpty()) {
-                // Jika superadmin ATAU tidak ada finance yang di-assign, berikan akses SEMUA data
                 $query = CustomerData::query();
             } else {
-                // Jika ada yang di-assign, filter berdasarkan finance tersebut
                 $branchIds = FinanceBranch::whereIn('finance_master_id', $assignedFinanceIds)->pluck('id');
                 $query = CustomerData::whereIn('finance_branch_id', $branchIds);
             }
@@ -95,18 +63,16 @@ class CustomerController extends Controller
                 )
                 ->where('customer_data.is_active', true)
                 ->when($lastSync && $lastId > 0, function ($q) use ($lastSync) {
-                    // Hanya gunakan filter waktu jika ini adalah sinkronisasi inkremental (ID > 0)
                     return $q->where('customer_data.created_at', '>', $lastSync);
                 })
                 ->when($lastId > 0 && !$lastSync, function ($q) use ($lastId) {
-                    // Fallback jika last_sync kosong tapi ada lastId
                     return $q->where('customer_data.id', '>', $lastId);
                 })
                 ->oldest('customer_data.id')
                 ->simplePaginate(5000);
         }
 
-        // Jika response bukan paginator (untuk online search), buat array structure agar tetap kompatibel
+        // Response structure agar kompatibel dengan aplikasi
         $responseData = $customers instanceof AbstractPaginator
             ? $customers
             : ['data' => $customers];
