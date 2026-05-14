@@ -49,28 +49,20 @@ class CustomerController extends Controller
                             ->take(15)
                             ->get();
 
-                        // Load relations and transform
-                        $customers = $scoutResults->map(function ($c) {
-                            return [
-                                'id' => $c->id,
-                                'nopol' => $c->nopol,
-                                'nama' => $c->nama,
-                                'tipe' => $c->tipe,
-                                'location_name' => $c->financeBranch->locationMaster->name ?? '-',
-                            ];
-                        });
+                        // Coba Meilisearch (Scout)
+                        $customers = CustomerData::search($search)
+                            ->where('is_active', 1)
+                            ->take(20)
+                            ->get();
                     } catch (\Exception $e) {
-                        // Jika Meilisearch gagal, fallback ke pencarian database manual
-                        $customers = $onlineQuery
-                            ->where(function($q) use ($search) {
-                                $q->where('customer_data.nopol', 'like', "%$search%")
-                                  ->orWhere('customer_data.nama', 'like', "%$search%");
-                            })
-                            ->limit(15)
+                        // Jika Meili gagal, gunakan SQL Biasa yang Ringan
+                        $customers = CustomerData::where('nopol', 'like', "%$search%")
+                            ->where('is_active', 1)
+                            ->limit(20)
                             ->get();
                     }
                 } else {
-                    $customers = $onlineQuery->limit(10)->get();
+                    $customers = [];
                 }
 
         } else {
