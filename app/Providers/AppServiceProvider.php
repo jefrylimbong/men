@@ -26,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        URL::forceScheme('https');
         WithdrawalData::observe(WithdrawalObserver::class);
         User::observe(UserObserver::class);
 
@@ -33,5 +34,15 @@ class AppServiceProvider extends ServiceProvider
             'Vendor' => Vendor::class,
             'Finance' => FinanceMaster::class,
         ]);
+
+        // Meilisearch Filterable Attributes
+        if (config('scout.driver') === 'meilisearch') {
+            try {
+                $client = new \Meilisearch\Client(config('scout.meilisearch.host'), config('scout.meilisearch.key'));
+                $client->index('customer_data')->updateFilterableAttributes(['is_active']);
+            } catch (\Exception $e) {
+                // Silently fail if Meilisearch is not reachable
+            }
+        }
     }
 }
