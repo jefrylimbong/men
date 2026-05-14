@@ -42,25 +42,26 @@ class CustomerController extends Controller
                     ->where('customer_data.is_active', true);
 
                 if (! empty($search)) {
-                    // Gunakan whereRaw agar lebih presisi mengenali indeks nopol
-                    $onlineQuery->whereRaw('MATCH(nopol) AGAINST(? IN BOOLEAN MODE)', ['"'.$search.'"']);
+                    // Gunakan Scout untuk pencarian instan (Meilisearch)
+                    $scoutResults = CustomerData::search($search)
+                        ->where('is_active', true)
+                        ->take(10)
+                        ->get();
+
+                    // Load relations and transform to match expected API structure
+                    $customers = $scoutResults->map(function ($c) {
+                        return [
+                            'id' => $c->id,
+                            'nopol' => $c->nopol,
+                            'nama' => $c->nama,
+                            'tipe' => $c->tipe,
+                            'location_name' => $c->financeBranch->locationMaster->name ?? '-',
+                        ];
+                    });
+                } else {
+                    $customers = $onlineQuery->limit(10)->get();
                 }
 
-                $customers = $onlineQuery->limit(10)->get();
-            } catch (\Exception $e) {
-                \Log::error('Search error (whereRaw/Full-Text failed): '.$e->getMessage());
-
-                // Fallback aman menggunakan LIKE
-                $customers = CustomerData::query()
-                    ->leftJoin('finance_branches', 'customer_data.finance_branch_id', '=', 'finance_branches.id')
-                    ->leftJoin('location_masters', 'finance_branches.location_master_id', '=', 'location_masters.id')
-                    ->select('customer_data.id', 'customer_data.nopol', 'customer_data.nama', 'customer_data.tipe', 'location_masters.name as location_name')
-                    ->where('customer_data.is_active', true)
-                    ->when(! empty($search), function ($q) use ($search) {
-                        return $q->where('customer_data.nopol', 'LIKE', "%{$search}%");
-                    })
-                    ->limit(10)->get();
-            }
         } else {
             // Sinkronisasi: Cek hak akses
             if (($user && $user->type === 'superadmin') || $assignedFinanceIds->isEmpty()) {
