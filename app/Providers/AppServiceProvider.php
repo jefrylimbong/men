@@ -10,6 +10,7 @@ use App\Observers\UserObserver;
 use App\Observers\WithdrawalObserver;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
