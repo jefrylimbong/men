@@ -44,14 +44,16 @@ class CustomerData extends Model
      */
     public function toSearchableArray(): array
     {
+        // Deteksi apakah Nopol ini "asli" atau cuma Nomor Mesin (biasanya mesin ada tanda '-')
+        $isRealNopol = (!str_contains($this->nopol, '-')) && (strlen($this->nopol) < 10);
+
         return [
             'id' => (int) $this->id,
             'nopol' => $this->nopol,
             'nama' => $this->nama,
             'tipe' => $this->tipe,
-            'norak' => $this->norak,
-            'nosin' => $this->nosin,
             'is_active' => (int) $this->is_active,
+            'is_real_nopol' => $isRealNopol ? 1 : 0, // Kolom pembantu
         ];
     }
 }

@@ -40,7 +40,7 @@ class AppServiceProvider extends ServiceProvider
         if (config('scout.driver') === 'meilisearch') {
             try {
                 $client = new \Meilisearch\Client(config('scout.meilisearch.host'), config('scout.meilisearch.key'));
-                $client->index('customer_data')->updateFilterableAttributes(['is_active']);
+                $client->index('customer_data')->updateFilterableAttributes(['is_active', 'is_real_nopol']);
                 $client->index('customer_data')->updateSearchableAttributes(['nopol']);
             } catch (\Exception $e) {
                 // Silently fail if Meilisearch is not reachable
