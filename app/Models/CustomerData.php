@@ -58,4 +58,17 @@ class CustomerData extends Model
     {
         return $this->belongsTo(FinanceBranch::class);
     }
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => (int) $this->id,
+            'nopol' => $this->nopol,
+            'nama' => $this->nama,
+            'tipe' => $this->tipe,
+            'norak' => $this->norak,
+            'nosin' => $this->nosin,
+            'is_active' => (int) $this->is_active,
+        ];
+    }
 }
