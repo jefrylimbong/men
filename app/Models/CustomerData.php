@@ -28,6 +28,7 @@ class CustomerData extends Model
             'norak' => $this->norak,
             'alamat' => $this->alamat,
             'tipe' => $this->tipe,
+            'is_active' => (bool) $this->is_active,
         ];
     }
 
