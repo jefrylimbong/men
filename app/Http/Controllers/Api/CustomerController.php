@@ -31,6 +31,8 @@ class CustomerController extends Controller
                     // 2. Fallback: SQL Biasa jika Meilisearch gagal
                     $customers = CustomerData::where('nopol', 'like', "%$search%")
                         ->where('is_active', 1)
+                        ->where('nopol', 'not like', '%-%') // Buang yang ada tanda strip (nomor mesin)
+                        ->whereRaw('LENGTH(nopol) < 10')   // Buang yang terlalu panjang
                         ->limit(20)
                         ->get();
                 }
