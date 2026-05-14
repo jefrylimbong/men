@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
 use Laravel\Scout\Searchable;
 
 class CustomerData extends Model
@@ -12,25 +11,6 @@ class CustomerData extends Model
     use Searchable;
 
     protected $table = 'customer_data';
-
-    /**
-     * Get the indexable data array for the model.
-     *
-     * @return array<string, mixed>
-     */
-    public function toSearchableArray(): array
-    {
-        return [
-            'id' => (int) $this->id,
-            'nopol' => $this->nopol,
-            'nama' => $this->nama,
-            'nosin' => $this->nosin,
-            'norak' => $this->norak,
-            'alamat' => $this->alamat,
-            'tipe' => $this->tipe,
-            'is_active' => (bool) $this->is_active,
-        ];
-    }
 
     protected $fillable = [
         'nopol',
@@ -59,6 +39,9 @@ class CustomerData extends Model
         return $this->belongsTo(FinanceBranch::class);
     }
 
+    /**
+     * Konfigurasi data yang dikirim ke Meilisearch
+     */
     public function toSearchableArray(): array
     {
         return [
