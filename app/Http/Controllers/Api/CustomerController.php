@@ -42,22 +42,33 @@ class CustomerController extends Controller
                     ->where('customer_data.is_active', true);
 
                 if (! empty($search)) {
-                    // Gunakan Scout untuk pencarian instan (Meilisearch)
-                    $scoutResults = CustomerData::search($search)
-                        ->where('is_active', true)
-                        ->take(10)
-                        ->get();
+                    try {
+                        // Gunakan Scout untuk pencarian instan (Meilisearch)
+                        $scoutResults = CustomerData::search($search)
+                            ->where('is_active', true)
+                            ->take(15)
+                            ->get();
 
-                    // Load relations and transform to match expected API structure
-                    $customers = $scoutResults->map(function ($c) {
-                        return [
-                            'id' => $c->id,
-                            'nopol' => $c->nopol,
-                            'nama' => $c->nama,
-                            'tipe' => $c->tipe,
-                            'location_name' => $c->financeBranch->locationMaster->name ?? '-',
-                        ];
-                    });
+                        // Load relations and transform
+                        $customers = $scoutResults->map(function ($c) {
+                            return [
+                                'id' => $c->id,
+                                'nopol' => $c->nopol,
+                                'nama' => $c->nama,
+                                'tipe' => $c->tipe,
+                                'location_name' => $c->financeBranch->locationMaster->name ?? '-',
+                            ];
+                        });
+                    } catch (\Exception $e) {
+                        // Jika Meilisearch gagal, fallback ke pencarian database manual
+                        $customers = $onlineQuery
+                            ->where(function($q) use ($search) {
+                                $q->where('customer_data.nopol', 'like', "%$search%")
+                                  ->orWhere('customer_data.nama', 'like', "%$search%");
+                            })
+                            ->limit(15)
+                            ->get();
+                    }
                 } else {
                     $customers = $onlineQuery->limit(10)->get();
                 }
